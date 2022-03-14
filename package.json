@@ -1,0 +1,31 @@
+{
+  "name": "mini-vue",
+  "version": "1.0.0",
+  "description": "To implement a mini vue3 for study",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jiangsongyang/mini-vue.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jiangsongyang/mini-vue/issues"
+  },
+  "homepage": "https://github.com/jiangsongyang/mini-vue#readme",
+  "dependencies": {
+    "typescript": "^4.6.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.17.5",
+    "@babel/preset-env": "^7.16.11",
+    "@babel/preset-typescript": "^7.16.7",
+    "@types/jest": "^27.4.1",
+    "babel-jest": "^27.5.1",
+    "jest": "^27.5.1"
+  }
+}

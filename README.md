@@ -1,2 +1,2 @@
 # mini-vue
-To implement a mini vue3 for study
+To implement a mini vue3 for learn
