@@ -1,5 +1,5 @@
-import { reactive } from '../reactive'
-import { effect } from '../effect'
+import { reactive } from '../src/reactive'
+import { effect } from '../src/effect'
 
 describe('scheduler', () => {
   // 1 : 通过 effect 的第二个参数给定一个 scheduler function

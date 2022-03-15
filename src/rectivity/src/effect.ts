@@ -1,4 +1,4 @@
-import { isFun } from '../shared'
+import { isFun } from '../../shared'
 
 type EffectOption = { scheduler?: () => void }
 // 依赖工厂

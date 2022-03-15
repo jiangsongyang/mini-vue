@@ -1,4 +1,4 @@
-import { reactive } from "../reactive";
+import { reactive } from "../src/reactive";
 describe("reactive", () => {
   it("happy path", () => {
     const original = { foo: 1 };
