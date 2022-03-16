@@ -1,4 +1,4 @@
-import { readonly } from '../src/reactive'
+import { readonly, reactive, isReadOnly } from '../src/reactive'
 
 describe('readonly', () => {
   it('happy path', () => {
@@ -13,5 +13,15 @@ describe('readonly', () => {
     const user = readonly({ age: 10 })
     user.age = 11
     expect(console.warn).toBeCalled()
+  })
+
+  it('test isReadOnly', () => {
+    const original = { foo: 1 }
+    const obj = reactive(original)
+    const readonlyObj = readonly(original)
+
+    expect(isReadOnly(readonlyObj)).toBeTruthy()
+    expect(isReadOnly(original)).not.toBeTruthy()
+    expect(isReadOnly(obj)).not.toBeTruthy()
   })
 })

@@ -1,4 +1,5 @@
 import { track, trigger } from './effect'
+import { REACTIVE_FLAGS } from './reactive'
 
 // common getter && setter
 // use for
@@ -13,6 +14,16 @@ const readonlyGet = createGetter(true)
 
 function createGetter(isReadOnly: boolean = false) {
   return function get(target: any, key: string) {
+    // 处理 isReadOnly 和 isReactive
+    // 触发 getter 时 如果 key 为 
+    // IS_REACTIVE || IS_READONLY
+    // 则提前 return
+    if (key === REACTIVE_FLAGS.IS_REACTIVE) {
+      return !isReadOnly
+    } else if (key === REACTIVE_FLAGS.IS_READONLY) {
+      return isReadOnly
+    }
+
     const res = Reflect.get(target, key)
     if (!isReadOnly) {
       // 需要进行依赖的收集
