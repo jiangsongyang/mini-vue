@@ -1,6 +1,16 @@
 import { isFun, extend } from '../../shared'
 
 type EffectOption = { scheduler?: () => void; onStop?: () => void }
+
+// 全局的依赖收集对象
+const targetMap = new Map()
+
+// 当前执行的 effect fn
+let activeEffect: ReactiveEffect
+
+// 全局 track 开关 防止 obj.x ++ 会重新触发依赖收集 导致 stop 无效
+let shouldTrack: boolean
+
 // 依赖工厂
 class ReactiveEffect {
   public _fn
@@ -17,13 +27,19 @@ class ReactiveEffect {
     this._onStop = isFun(onStop) ? onStop : null
   }
   run() {
-    // 将当前依赖保存到全局 用于收集
-    activeEffect = this
-
     // 执行依赖
     // 执行的过程中 会触发数据劫持
     // 从而触发 trigger 来收集刚赋值的 activeEffect
-    return this._fn()
+    if (!this.active) {
+      return this._fn()
+    }
+    shouldTrack = true
+    // 将当前依赖保存到全局 用于收集
+    activeEffect = this
+    const result = this._fn()
+    // reset state
+    shouldTrack = false
+    return result
   }
   stop() {
     // 只清空一次 防止重复删除 浪费性能
@@ -43,19 +59,14 @@ function cleanupEffect(effect: any) {
   })
 }
 
-// 当前执行的 effect fn
-let activeEffect: ReactiveEffect
-
-// 全局的依赖收集对象
-const targetMap = new Map()
-
 // 收集依赖
 export function track<T>(target: T, key: string) {
+  if (!isTracking()) return
   // 数据结构为
   // targetMap -> depsMap -> dep
   // 全局的 targetMap 最外层的大管家
-  // 里面包含 depsMap 用于存储依赖集合
-  // deps 为所有的依赖的集合
+  // 里面包含 depsMap 用于存储依赖 [key: target , value : effect Set]
+  // deps 为所有的依赖的集合 [effect Set]
   let depsMap = targetMap.get(target)
   // 初始化的时候没有 depsMap
   // 创建 depsMap
@@ -72,15 +83,21 @@ export function track<T>(target: T, key: string) {
     // 追加到 depsMap 中
     depsMap.set(key, dep)
   }
-  // 依赖收集
+
+  // 如果没有重复的依赖
+  if (dep.has(activeEffect)) return
+  // 就进行依赖收集
   dep.add(activeEffect)
   // note
   // 想要实现 stop 功能
   // 需要将 dep 反向收集到 activeEffect 中
   // 在执行 stop 时 只需要将 deps 中的所有 dep 清空即可
   // 如果没有调用 effect 就不会有 activeEffect
-  if (!activeEffect) return
   activeEffect.deps.push(dep)
+}
+
+function isTracking() {
+  return shouldTrack && activeEffect !== undefined
 }
 
 // 触发依赖

@@ -38,8 +38,14 @@ describe('effect', () => {
     stop(runner)
     obj.foo = 12
     expect(dummy).toBe(11)
+    // obj.foo ++ === obj.foo = obj.foo + 1
+    // 会同时触发 get 和 set
+    // 全局的 activeEffect 仍是之前 effect 的 fn
+    // 所以导致重新被收集起来
+    obj.foo++
+    expect(dummy).toBe(11)
     runner()
-    expect(dummy).toBe(12)
+    expect(dummy).toBe(13)
   })
 
   it('onStop', () => {
