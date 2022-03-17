@@ -24,4 +24,14 @@ describe('readonly', () => {
     expect(isReadOnly(original)).not.toBeTruthy()
     expect(isReadOnly(obj)).not.toBeTruthy()
   })
+
+  it('should make nested values readonly', () => {
+    const original = { foo: 1, bar: { baz: 2 } }
+    const wrapped = readonly(original)
+    expect(wrapped).not.toBe(original)
+    expect(isReadOnly(original)).not.toBeTruthy()
+    expect(isReadOnly(wrapped)).toBeTruthy()
+    expect(isReadOnly(original.bar)).not.toBeTruthy()
+    expect(isReadOnly(wrapped.bar)).toBeTruthy()
+  })
 })

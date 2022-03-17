@@ -1,5 +1,6 @@
 import { track, trigger } from './effect'
-import { REACTIVE_FLAGS } from './reactive'
+import { reactive, readonly, REACTIVE_FLAGS } from './reactive'
+import { isObj, isArr } from '../../shared'
 
 // common getter && setter
 // use for
@@ -15,7 +16,7 @@ const readonlyGet = createGetter(true)
 function createGetter(isReadOnly: boolean = false) {
   return function get(target: any, key: string) {
     // 处理 isReadOnly 和 isReactive
-    // 触发 getter 时 如果 key 为 
+    // 触发 getter 时 如果 key 为
     // IS_REACTIVE || IS_READONLY
     // 则提前 return
     if (key === REACTIVE_FLAGS.IS_REACTIVE) {
@@ -25,6 +26,11 @@ function createGetter(isReadOnly: boolean = false) {
     }
 
     const res = Reflect.get(target, key)
+    // 判断 res 是否是 Object
+    // 如果是嵌套的结构
+    if (isObj(res) || isArr(res)) {
+      return isReadOnly ? readonly(res) : reactive(res)
+    }
     if (!isReadOnly) {
       // 需要进行依赖的收集
       track(target, key)
