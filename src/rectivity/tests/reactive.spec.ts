@@ -1,10 +1,11 @@
-import { reactive, readonly, isReactive } from '../src/reactive'
+import { reactive, readonly, isReactive, isProxy } from '../src/reactive'
 describe('reactive', () => {
   it('happy path', () => {
     const original = { foo: 1 }
     const observed = reactive(original)
     expect(observed).not.toBe(original)
     expect(observed.foo).toEqual(1)
+    expect(isProxy(observed)).toBeTruthy()
   })
 
   it('test isReactive', () => {

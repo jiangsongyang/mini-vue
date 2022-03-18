@@ -1,6 +1,6 @@
 import { track, trigger } from './effect'
 import { reactive, readonly, REACTIVE_FLAGS } from './reactive'
-import { isObj, isArr } from '../../shared'
+import { isObj, isArr, extend } from '../../shared'
 
 // common getter && setter
 // use for
@@ -13,7 +13,11 @@ const set = createSetter()
 // readonly
 const readonlyGet = createGetter(true)
 
-function createGetter(isReadOnly: boolean = false) {
+// shallowReadonly getter && setter
+//
+const shallowReadonlyGet = createGetter(true, true)
+
+function createGetter(isReadOnly: boolean = false, shallow = false) {
   return function get(target: any, key: string) {
     // 处理 isReadOnly 和 isReactive
     // 触发 getter 时 如果 key 为
@@ -26,6 +30,11 @@ function createGetter(isReadOnly: boolean = false) {
     }
 
     const res = Reflect.get(target, key)
+
+    if (shallow) {
+      return res
+    }
+
     // 判断 res 是否是 Object
     // 如果是嵌套的结构
     if (isObj(res) || isArr(res)) {
@@ -55,7 +64,7 @@ export const mutableHandler = {
 }
 
 // readonly 的 proxy 处理器
-export const readonlyHandler = {
+export const readonlyHandlers = {
   get: readonlyGet,
   set(t: any, key: string) {
     // 给出警告
@@ -65,3 +74,8 @@ export const readonlyHandler = {
     return true
   },
 }
+
+// shallowReadonly 的 proxy 处理器
+export const shallowReadonlyHandlers = extend({}, readonlyHandlers, {
+  get: shallowReadonlyGet,
+})

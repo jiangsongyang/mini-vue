@@ -1,4 +1,8 @@
-import { mutableHandler, readonlyHandler } from './baseHandlers'
+import {
+  mutableHandler,
+  readonlyHandlers,
+  shallowReadonlyHandlers,
+} from './baseHandlers'
 
 export enum REACTIVE_FLAGS {
   IS_REACTIVE = '__J_REACTIVE',
@@ -11,11 +15,15 @@ export function reactive<T extends Object>(raw: T) {
 
 // readonly 只有 get
 export function readonly<T extends Object>(raw: T) {
-  return createActiveObject<T>(raw, readonlyHandler)
+  return createActiveObject<T>(raw, readonlyHandlers)
 }
 
 function createActiveObject<T extends Object>(raw: T, baseHandlers: any) {
   return new Proxy(raw, baseHandlers)
+}
+
+export function shallowReadonly(raw: any) {
+  return new Proxy(raw, shallowReadonlyHandlers)
 }
 
 // isReactive 和 isReadOnly
@@ -26,4 +34,8 @@ export function isReactive(value: any) {
 
 export function isReadOnly(value: any) {
   return !!value[REACTIVE_FLAGS.IS_READONLY]
+}
+
+export function isProxy(raw: any) {
+  return isReadOnly(raw) || isReactive(raw)
 }
