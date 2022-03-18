@@ -30,9 +30,8 @@ class ReactiveEffect {
     // 执行依赖
     // 执行的过程中 会触发数据劫持
     // 从而触发 trigger 来收集刚赋值的 activeEffect
-    if (!this.active) {
-      return this._fn()
-    }
+    if (!this.active) return this._fn()
+    // change state
     shouldTrack = true
     // 将当前依赖保存到全局 用于收集
     activeEffect = this
@@ -59,7 +58,7 @@ function cleanupEffect(effect: any) {
   })
 }
 
-// 收集依赖
+// 收集依赖 - 入口
 export function track<T>(target: T, key: string) {
   if (!isTracking()) return
   // 数据结构为
@@ -83,7 +82,11 @@ export function track<T>(target: T, key: string) {
     // 追加到 depsMap 中
     depsMap.set(key, dep)
   }
+  trackEffects(dep)
+}
 
+// 收集依赖 - 执行
+export function trackEffects(dep: any) {
   // 如果没有重复的依赖
   if (dep.has(activeEffect)) return
   // 就进行依赖收集
@@ -96,7 +99,8 @@ export function track<T>(target: T, key: string) {
   activeEffect.deps.push(dep)
 }
 
-function isTracking() {
+// 是否可以被收集
+export function isTracking() {
   return shouldTrack && activeEffect !== undefined
 }
 
@@ -106,8 +110,15 @@ export function trigger<T>(target: T, key: string) {
   const depsMap = targetMap.get(target)
   // 拿到依赖的集合
   const dep = depsMap.get(key)
-  // 遍历集合 执行依赖
+
+  triggerEffects(dep)
+}
+
+// 遍历集合 执行依赖
+export function triggerEffects(dep: any) {
   for (const effect of dep) {
+    // 如果 options 中有 scheduler
+    // 就调用 scheduler
     if (effect._scheduler) {
       effect._scheduler()
     } else {

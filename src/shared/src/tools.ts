@@ -34,3 +34,6 @@ export const isArr = (tar: unknown) => getTypeString(tar) === TYPE_MAP.array
 export const isFun = (tar: unknown) => getTypeString(tar) === TYPE_MAP.function
 
 export const extend = Object.assign
+
+export const hasChanged = (val: unknown, newVal: unknown) =>
+  !Object.is(val, newVal)

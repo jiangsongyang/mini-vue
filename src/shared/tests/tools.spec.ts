@@ -12,4 +12,8 @@ describe('tools test', () => {
     expect(tools.getTypeString(() => {})).toBe(tools.TYPE_MAP['function'])
     expect(tools.getTypeString(Symbol(''))).toBe(tools.TYPE_MAP['symbol'])
   })
+
+  it('test hasChanged', () => {
+    expect(tools.hasChanged({}, { a: 1 })).toBeTruthy()
+  })
 })
