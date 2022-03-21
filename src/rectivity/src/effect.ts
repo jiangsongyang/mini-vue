@@ -12,7 +12,7 @@ let activeEffect: ReactiveEffect
 let shouldTrack: boolean
 
 // 依赖工厂
-class ReactiveEffect {
+export class ReactiveEffect {
   public _fn
   public _scheduler
   public _onStop
