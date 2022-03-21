@@ -19,8 +19,6 @@ function mountComponent(vnode, container) {
   const instance = createComponentInstance(vnode)
   // 2 : 安装组件
   setupComponent(instance)
-  console.log(instance , 'instance222');
-  
   setupRenderEffect(instance, container)
 }
 

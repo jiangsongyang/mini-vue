@@ -45,7 +45,5 @@ function handleSetupResult(instance, setupResult) {
 
 function finishComponentSetup(instance) {
   const Component = instance.type
-  console.log(instance , Component , 'instance');
-  
   instance.render = Component.render
 }
