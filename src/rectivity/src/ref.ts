@@ -1,13 +1,29 @@
-import { trackEffects, triggerEffects, isTracking } from '../src/effect'
-import { reactive } from '../src/reactive'
+import { trackEffects, triggerEffects, isTracking, Dep } from '../src/effect'
+import { reactive, isReactive } from '../src/reactive'
 import { hasChanged, isObj } from '../../shared'
+import { shallowUnwrapHandlers } from './baseHandlers'
+
+export declare const RefSymbol: unique symbol
+export interface Ref<T = any> {
+  value: T
+  /**
+   * Type differentiator only.
+   * We need this to be in public d.ts but don't want it to show up in IDE
+   * autocomplete, so we use a private Symbol instead.
+   */
+  [RefSymbol]: true
+  /**
+   * @internal
+   */
+  _shallow?: boolean
+}
 
 // ref 的构造类
 // 劫持这个 class 的
 // get value 和 set value
-class RefImpl {
+class RefImpl<T> {
   // 依赖集合
-  public dep
+  public dep: Dep
   // get return 的值
   private _value
   // 因为 如果传入对象
@@ -15,7 +31,7 @@ class RefImpl {
   // 所以需要 _rawValue 来保存原始值 用于更新对比
   public _rawValue
   public __V_IS_REF: boolean = true
-  constructor(value: any) {
+  constructor(value: T) {
     this._rawValue = value
     this._value = convert(value)
     this.dep = new Set()
@@ -49,43 +65,26 @@ function createRefImp<T>(value: T) {
   return new RefImpl(value)
 }
 
-function trackRefValue(ref: RefImpl) {
+function trackRefValue(ref: RefImpl<unknown>) {
   // 如果可以收集依赖
   // 防止没调用 effect 直接 get
   if (isTracking()) {
-    trackEffects(ref.dep)
+    trackEffects(ref.dep as Dep)
   }
 }
 
-export function isRef(raw: any) {
-  return !!raw.__V_IS_REF
+export function isRef(r: any): boolean {
+  return !!r.__V_IS_REF
 }
 
-export function unRef(raw: any) {
+export function unRef(raw: any): boolean {
   return isRef(raw) ? raw._rawValue : raw
 }
 
 // 为什么在 <template> 中读取 ref 不需要 ref.value
 // 就是因为在这个函数中劫持了 get
-export function proxyRefs(objectWithRef: any) {
-  return new Proxy(objectWithRef, {
-    // 在 get 时调用 unRef 拆包
-    get(target: any, key: string) {
-      return unRef(Reflect.get(target, key))
-    },
-    set(target: any, key: string, value: any) {
-      // 如果 set 的目标是 ref
-      // 并且 
-      // set value 不是 ref
-      // 就给目标 ref 直接 .value 赋值 
-      if (isRef(target[key]) && !isRef(value)) {
-        return (target[key].value = value)
-      } else {
-        // 目标不是 ref
-        // 或者
-        // set value 是 ref
-        return Reflect.set(target, key, value)
-      }
-    },
-  })
+export function proxyRefs<T extends object>(objectWithRefs: T) {
+  return isReactive(objectWithRefs)
+    ? objectWithRefs
+    : new Proxy(objectWithRefs, shallowUnwrapHandlers)
 }

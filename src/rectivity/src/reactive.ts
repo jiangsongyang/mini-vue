@@ -4,6 +4,11 @@ import {
   shallowReadonlyHandlers,
 } from './baseHandlers'
 
+export interface Target {
+  [REACTIVE_FLAGS.IS_REACTIVE]?: boolean
+  [REACTIVE_FLAGS.IS_READONLY]?: boolean
+}
+
 export enum REACTIVE_FLAGS {
   IS_REACTIVE = '__V_REACTIVE',
   IS_READONLY = '__V_READONLY',
@@ -22,20 +27,20 @@ function createActiveObject<T extends Object>(raw: T, baseHandlers: any) {
   return new Proxy(raw, baseHandlers)
 }
 
-export function shallowReadonly(raw: any) {
+export function shallowReadonly<T extends object>(raw: T) {
   return new Proxy(raw, shallowReadonlyHandlers)
 }
 
 // isReactive 和 isReadOnly
 // 思路为 : 触发 getter 根据 handler 中的 isReadOnly 判断
-export function isReactive(value: any) {
-  return !!value[REACTIVE_FLAGS.IS_REACTIVE]
+export function isReactive(value: unknown): boolean {
+  return !!(value as Target)[REACTIVE_FLAGS.IS_REACTIVE]
 }
 
-export function isReadOnly(value: any) {
-  return !!value[REACTIVE_FLAGS.IS_READONLY]
+export function isReadOnly(value: unknown): boolean {
+  return !!(value as Target)[REACTIVE_FLAGS.IS_READONLY]
 }
 
-export function isProxy(raw: any) {
-  return isReadOnly(raw) || isReactive(raw)
+export function isProxy(value: unknown): boolean {
+  return isReadOnly(value) || isReactive(value)
 }

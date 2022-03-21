@@ -1,6 +1,11 @@
 import { isFun, extend } from '../../shared'
 
-type EffectOption = { scheduler?: () => void; onStop?: () => void }
+export type Dep = Set<ReactiveEffect>
+
+type EffectOption = {
+  scheduler?: () => void
+  onStop?: () => void
+}
 
 // 全局的依赖收集对象
 const targetMap = new Map()
@@ -12,11 +17,12 @@ let activeEffect: ReactiveEffect
 let shouldTrack: boolean
 
 // 依赖工厂
-export class ReactiveEffect {
+export class ReactiveEffect<T = any> {
   public _fn
   public _scheduler
   public _onStop
-  deps: any[] = []
+  public effect?: ReactiveEffect<T>
+  deps: Dep[] = []
   // 标记用户是否多次调用 stop
   active: boolean = true
 
@@ -51,8 +57,8 @@ export class ReactiveEffect {
   }
 }
 
-function cleanupEffect(effect: any) {
-  effect.deps.forEach((dep: Set<any>) => {
+function cleanupEffect(effect: ReactiveEffect) {
+  effect.deps.forEach((dep: Dep) => {
     // 因为 dep 是 Set 结构
     dep.delete(effect)
   })
@@ -86,7 +92,7 @@ export function track<T>(target: T, key: string) {
 }
 
 // 收集依赖 - 执行
-export function trackEffects(dep: any) {
+export function trackEffects(dep: Dep) {
   // 如果没有重复的依赖
   if (dep.has(activeEffect)) return
   // 就进行依赖收集
@@ -105,7 +111,7 @@ export function isTracking() {
 }
 
 // 触发依赖
-export function trigger<T>(target: T, key: string) {
+export function trigger<T>(target: T, key: string | symbol) {
   // 在全局依赖中取出 depsMap
   const depsMap = targetMap.get(target)
   // 拿到依赖的集合
@@ -115,7 +121,7 @@ export function trigger<T>(target: T, key: string) {
 }
 
 // 遍历集合 执行依赖
-export function triggerEffects(dep: any) {
+export function triggerEffects(dep: Dep) {
   for (const effect of dep) {
     // 如果 options 中有 scheduler
     // 就调用 scheduler
@@ -142,6 +148,6 @@ export function effect(fn: () => void, options?: EffectOption) {
 }
 
 // 如果想取消通知 只需要删除 depsMap 中所有的 dep
-export function stop(runner: any) {
-  runner.effect.stop()
+export function stop(runner: ReactiveEffect) {
+  if (runner.effect) runner.effect.stop()
 }
