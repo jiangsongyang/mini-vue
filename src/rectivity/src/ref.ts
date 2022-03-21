@@ -14,6 +14,7 @@ class RefImpl {
   // _value 在 初始化时已经被处理成 proxy 了
   // 所以需要 _rawValue 来保存原始值 用于更新对比
   public _rawValue
+  public __V_IS_REF: boolean = true
   constructor(value: any) {
     this._rawValue = value
     this._value = convert(value)
@@ -54,4 +55,12 @@ function trackRefValue(ref: RefImpl) {
   if (isTracking()) {
     trackEffects(ref.dep)
   }
+}
+
+export function isRef(raw: any) {
+  return !!raw.__V_IS_REF
+}
+
+export function unRef(raw: any) {
+  return isRef(raw) ? raw._rawValue : raw
 }
