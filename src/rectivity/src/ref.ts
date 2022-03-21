@@ -64,3 +64,28 @@ export function isRef(raw: any) {
 export function unRef(raw: any) {
   return isRef(raw) ? raw._rawValue : raw
 }
+
+// 为什么在 <template> 中读取 ref 不需要 ref.value
+// 就是因为在这个函数中劫持了 get
+export function proxyRefs(objectWithRef: any) {
+  return new Proxy(objectWithRef, {
+    // 在 get 时调用 unRef 拆包
+    get(target: any, key: string) {
+      return unRef(Reflect.get(target, key))
+    },
+    set(target: any, key: string, value: any) {
+      // 如果 set 的目标是 ref
+      // 并且 
+      // set value 不是 ref
+      // 就给目标 ref 直接 .value 赋值 
+      if (isRef(target[key]) && !isRef(value)) {
+        return (target[key].value = value)
+      } else {
+        // 目标不是 ref
+        // 或者
+        // set value 是 ref
+        return Reflect.set(target, key, value)
+      }
+    },
+  })
+}

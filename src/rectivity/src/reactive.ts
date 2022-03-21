@@ -5,8 +5,8 @@ import {
 } from './baseHandlers'
 
 export enum REACTIVE_FLAGS {
-  IS_REACTIVE = '__J_REACTIVE',
-  IS_READONLY = '__J_READONLY',
+  IS_REACTIVE = '__V_REACTIVE',
+  IS_READONLY = '__V_READONLY',
 }
 
 export function reactive<T extends Object>(raw: T) {
