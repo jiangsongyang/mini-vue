@@ -2,8 +2,11 @@
   "name": "mini-vue",
   "version": "1.0.0",
   "description": "To implement a mini vue3 for study",
-  "main": "index.js",
+  "main": "lib/guide-mini-vue.cjs.js",
+  "module": "lib/guide-mini-vue.esm.js",
   "scripts": {
+    "dev": "rollup -c rollup.config.js",
+    "build": "rollup -c rollup.config.js",
     "test": "jest"
   },
   "repository": {
@@ -24,8 +27,11 @@
     "@babel/core": "^7.17.5",
     "@babel/preset-env": "^7.16.11",
     "@babel/preset-typescript": "^7.16.7",
+    "@rollup/plugin-typescript": "^8.3.1",
     "@types/jest": "^27.4.1",
     "babel-jest": "^27.5.1",
-    "jest": "^27.5.1"
+    "jest": "^27.5.1",
+    "rollup": "^2.70.1",
+    "tslib": "^2.3.1"
   }
 }

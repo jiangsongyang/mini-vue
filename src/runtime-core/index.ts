@@ -1,0 +1,5 @@
+export * from './src/component'
+export * from './src/createApp'
+export * from './src/h'
+export * from './src/renderer'
+export * from './src/vnode'
