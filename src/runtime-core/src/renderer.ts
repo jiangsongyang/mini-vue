@@ -50,7 +50,7 @@ function mountElement(vnode: VNode, container: RendererElement) {
 
   const { type, props, children } = vnode
   // 生成元素
-  const el = document.createElement(type)
+  const el = (vnode.el = document.createElement(type))
   // 处理 props
   for (const prop in props) {
     const propValue = props[prop]
@@ -79,12 +79,16 @@ function mountComponent(vnode: VNode, container: RendererElement) {
   const instance = createComponentInstance(vnode)
   // 2 : 安装组件
   setupComponent(instance)
-  setupRenderEffect(instance, container)
+  setupRenderEffect(instance, vnode, container)
 }
 
-function setupRenderEffect(instance: any, container: RendererElement) {
+function setupRenderEffect(instance: any, vnode, container: RendererElement) {
+  const { proxy } = instance
   // 根节点下的 虚拟节点树
-  const subTree = instance.render()
+  const subTree = instance.render.call(proxy)
   // vnode -> patch element -> mount element
   patch(subTree, container)
+
+  // 在 patch 完所有的 subTree 后 给当前节点增加 el
+  vnode.el = subTree.el
 }

@@ -1,4 +1,5 @@
 import { VNode } from './vnode'
+import { publicInstanceProxyHandler } from './componentPublicInstance'
 import { isFun, isObj } from '../../shared'
 
 export type Data = Record<string, unknown>
@@ -7,6 +8,7 @@ export function createComponentInstance(vnode: VNode) {
   const component = {
     vnode,
     type: vnode.type,
+    setupResult: {},
   }
   return component
 }
@@ -23,11 +25,19 @@ export function setupComponent(instance) {
 function setupStatefulComponent(instance) {
   const Component = instance.type
 
+  // ctx
+  // 通过做代理
+  // 在实例上增加 proxy
+  // 在 render 的时候 call proxy 就可以实现在 render function 中访问 this.xxx
+  // NOTE
+  // 在这里只是做 添加操作
+  // 真正执行 get 的时候 setupResult 已经拿到了
+  instance.proxy = new Proxy({ _: instance }, publicInstanceProxyHandler)
+
   const { setup } = Component
 
   if (setup) {
     const setupResult = setup()
-
     handleSetupResult(instance, setupResult)
   }
 }

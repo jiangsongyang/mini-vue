@@ -5,16 +5,17 @@ import { h } from '../../lib/guide-mini-vue.esm.js'
 // render
 export const App = {
   render() {
+    window.self = this
     return h(
       'div',
       { id: 'root', class: ['red', 'blue'] },
       // test string child
-      // `hi ${this.msg}`
+      `hi - ${this.msg}`
       // test array child
-      [
-        h('p', {}, 'this is p tag'),
-        h('p', {}, [h('div', {}, 'this is child div')]),
-      ]
+      // [
+      //   h('p', {}, 'this is p tag'),
+      //   h('p', {}, [h('div', {}, 'this is child div')]),
+      // ]
     )
   },
   setup() {

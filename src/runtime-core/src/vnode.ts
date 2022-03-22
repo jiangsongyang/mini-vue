@@ -35,6 +35,7 @@ export type VNode<
   type: any // VNodeTypes
   props: (VNodeProps & ExtraProps) | null
   children: VNodeNormalizedChildren
+  el: any
 }
 
 export function createVNode(
@@ -43,7 +44,7 @@ export function createVNode(
   // children: VNodeNormalizedChildren
   type: VNodeTypes,
   props: (Data & VNodeProps) | null = null,
-  children?: any,
+  children?: any
 ): VNode {
   const vnode: VNode = {
     type,
