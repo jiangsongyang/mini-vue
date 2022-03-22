@@ -8,7 +8,12 @@ export const App = {
     window.self = this
     return h(
       'div',
-      { id: 'root', class: ['red', 'blue'] },
+      {
+        id: 'root',
+        onClick() {
+          console.log('click' , this)
+        },
+      },
       // test string child
       `hi - ${this.msg}`
       // test array child

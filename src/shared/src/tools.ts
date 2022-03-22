@@ -39,3 +39,5 @@ export const hasChanged = (val: unknown, newVal: unknown) =>
   !Object.is(val, newVal)
 
 export const isElement = (target: any) => target.nodeType === 1
+
+export const isOn = (target: string) => /^on[A-Z]/.test(target)

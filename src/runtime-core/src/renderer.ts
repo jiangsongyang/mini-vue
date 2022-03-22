@@ -1,5 +1,5 @@
 import { createComponentInstance, setupComponent } from './component'
-import { isStr, isObj, isArr, ShapeFlags } from '../../shared'
+import { isOn, ShapeFlags } from '../../shared'
 import { VNode } from './vnode'
 
 export interface RendererNode {
@@ -57,7 +57,13 @@ function mountElement(vnode: VNode, container: RendererElement) {
   // 处理 props
   for (const prop in props) {
     const propValue = props[prop]
-    el.setAttribute(prop, propValue)
+    // 绑定事件
+    if (isOn(prop)) {
+      const eventType = prop.slice(2).toLowerCase()
+      el.addEventListener(eventType, propValue.bind(vnode))
+    } else {
+      el.setAttribute(prop, propValue)
+    }
   }
   // 处理子节点
   if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
