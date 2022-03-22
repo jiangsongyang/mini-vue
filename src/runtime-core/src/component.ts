@@ -3,6 +3,7 @@ import { VNode } from './vnode'
 import { publicInstanceProxyHandler } from './componentPublicInstance'
 import { isFun, isObj } from '../../shared'
 import { initProps } from './componentProps'
+import { emit } from './componentEmit'
 
 export type Data = Record<string, unknown>
 
@@ -12,7 +13,15 @@ export function createComponentInstance(vnode: VNode) {
     type: vnode.type,
     setupResult: {},
     props: {},
+    emit: () => {},
   }
+
+  // 这里使用 bind 是因为
+  // 用户在使用 emit 时 
+  // 只需要传入 事件名称
+  // 但是我们需要获取组件实例 就使用 bind 通过第二个参数传入
+  component.emit = emit.bind(null, component)
+
   return component
 }
 
@@ -40,7 +49,9 @@ function setupStatefulComponent(instance) {
   // 并且执行 setup
   const { setup } = Component
   if (setup) {
-    const setupResult = setup(shallowReadonly(instance.props))
+    const setupResult = setup(shallowReadonly(instance.props), {
+      emit: instance.emit,
+    })
     // 处理 setup function 的返回值
     handleSetupResult(instance, setupResult)
   }

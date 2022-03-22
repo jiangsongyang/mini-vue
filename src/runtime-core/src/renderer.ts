@@ -60,7 +60,7 @@ function mountElement(vnode: VNode, container: RendererElement) {
     // 绑定事件
     if (isOn(prop)) {
       const eventType = prop.slice(2).toLowerCase()
-      el.addEventListener(eventType, propValue.bind(vnode))
+      el.addEventListener(eventType, propValue)
     } else {
       el.setAttribute(prop, propValue)
     }

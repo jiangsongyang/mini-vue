@@ -44,3 +44,13 @@ export const isOn = (target: string) => /^on[A-Z]/.test(target)
 
 export const hasOwn = (value: any, key: string) =>
   Object.prototype.hasOwnProperty.call(value, key)
+
+export const capitalize = (str: string) =>
+  str.charAt(0).toUpperCase() + str.slice(1)
+
+  export const toHandlerKey = (str: string) => (str ? `on${capitalize(str)}` : '')
+
+const camelizeRE = /-(\w)/g
+
+export const camelize = (str: string) =>
+  str.replace(camelizeRE, (_, c) => (c ? c.toUpperCase() : ''))
