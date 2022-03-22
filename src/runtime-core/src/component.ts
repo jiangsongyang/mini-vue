@@ -1,6 +1,9 @@
+import { VNode } from './vnode'
 import { isFun, isObj } from '../../shared'
 
-export function createComponentInstance(vnode) {
+export type Data = Record<string, unknown>
+
+export function createComponentInstance(vnode: VNode) {
   const component = {
     vnode,
     type: vnode.type,
