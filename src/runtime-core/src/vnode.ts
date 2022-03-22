@@ -33,10 +33,15 @@ export type VNode<
   HostElement = RendererElement,
   ExtraProps = { [key: string]: any }
 > = {
-  type: any // VNodeTypes
+  // 该节点的类型
+  type: any
+  // 该节点的属性
   props: (VNodeProps & ExtraProps) | null
+  // 该节点下的子节点
   children: VNodeNormalizedChildren
+  // vnode对应的真实DOM
   el: any
+  // 用于区分该 vnode 是什么形态
   shapeFlag: ShapeFlags
 }
 
@@ -48,29 +53,28 @@ export function createVNode(
   props: (Data & VNodeProps) | null = null,
   children?: any
 ): VNode {
+  // 初始化 创建 vnode
   const vnode: VNode = {
     type,
     props,
     children,
     el: null,
-    shapeFlag: getShapeFlag(type),
+    shapeFlag: getShapeFlag(type), // 先根据 type 初始化 shapeFlag
   }
 
+  // 再根据子节点类型 修改 shapeFlag
   if (isStr(children)) {
     vnode.shapeFlag = vnode.shapeFlag | ShapeFlags.TEXT_CHILDREN
-  }
-  // other
-  else if (isArr(children)) {
+  } else if (isArr(children)) {
     vnode.shapeFlag = vnode.shapeFlag | ShapeFlags.ARRAY_CHILDREN
   }
-
   return vnode
-}
-
-export function isVNode(value: any): value is VNode {
-  return value ? value.__v_isVNode === true : false
 }
 
 function getShapeFlag(type: VNodeTypes) {
   return isStr(type) ? ShapeFlags.ELEMENT : ShapeFlags.STATEFUL_COMPONENT
+}
+
+export function isVNode(value: any): value is VNode {
+  return value ? value.__v_isVNode === true : false
 }

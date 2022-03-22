@@ -32,14 +32,20 @@ function setupStatefulComponent(instance) {
   // NOTE
   // 在这里只是做 添加操作
   // 真正执行 get 的时候 setupResult 已经拿到了
-  instance.proxy = new Proxy({ _: instance }, publicInstanceProxyHandler)
+  instance.proxy = createContext(instance)
 
+  // 拿到 setup option
+  // 并且执行 setup
   const { setup } = Component
-
   if (setup) {
     const setupResult = setup()
+    // 处理 setup function 的返回值
     handleSetupResult(instance, setupResult)
   }
+}
+
+function createContext(instance) {
+  return new Proxy({ _: instance }, publicInstanceProxyHandler)
 }
 
 function handleSetupResult(instance, setupResult) {
@@ -47,16 +53,21 @@ function handleSetupResult(instance, setupResult) {
   // setup result is render function
   if (isFun(setupResult)) {
   }
-  // 如果是对象
+  // setup function 如果返回的是对象
   // 当做 state 处理
   else if (isObj(setupResult)) {
+    // 把执行结果添加到 instance 中
     instance.setupResult = setupResult
   }
-
+  // 开始执行 安装结束阶段的处理
   finishComponentSetup(instance)
 }
 
 function finishComponentSetup(instance) {
   const Component = instance.type
+  // 给实例添加 render 方法
+  // FIXME
+  // 目前轮子使用方法为 : 
+  // 必须要用户传入 render function
   instance.render = Component.render
 }

@@ -13,24 +13,26 @@ export function render(initialVNode: VNode, container: RendererElement) {
   patch(initialVNode, container)
 }
 
-function patch(VNode: VNode, container: RendererElement) {
-  const { shapeFlag } = VNode
+// NOTE
+// 核心方法
+function patch(vnode: VNode, container: RendererElement) {
+  const { shapeFlag } = vnode
   // 判断节点类型
   if (shapeFlag & ShapeFlags.ELEMENT) {
     // type === 'div' | 'p' | ...
-    processElement(VNode, container)
+    processElement(vnode, container)
   }
   // 如果是根组件
   else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
-    processComponent(VNode, container)
+    processComponent(vnode, container)
   }
 }
 
-function processElement(VNode: VNode, container: RendererElement) {
-  mountElement(VNode, container)
+function processElement(vnode: VNode, container: RendererElement) {
+  mountElement(vnode, container)
 }
 
-function mountElement(VNode: VNode, container: RendererElement) {
+function mountElement(vnode: VNode, container: RendererElement) {
   // 一个 element 核心的三要素
   // 1 : element type       => div | p | ...
   // 2 : element attributes => class | id | ...
@@ -49,9 +51,9 @@ function mountElement(VNode: VNode, container: RendererElement) {
   //      </p>
   //   这种情况需要遍历去 patch 子节点
 
-  const { type, props, children, shapeFlag } = VNode
+  const { type, props, children, shapeFlag } = vnode
   // 生成元素
-  const el = (VNode.el = document.createElement(type))
+  const el = (vnode.el = document.createElement(type))
   // 处理 props
   for (const prop in props) {
     const propValue = props[prop]
@@ -67,20 +69,21 @@ function mountElement(VNode: VNode, container: RendererElement) {
   container.appendChild(el)
 }
 
-function mountChild(VNode: any, container: RendererElement) {
-  VNode.forEach((child: VNode) => patch(child, container))
+function mountChild(vnode: any, container: RendererElement) {
+  vnode.forEach((child: VNode) => patch(child, container))
 }
 
-function processComponent(VNode: VNode, container: RendererElement) {
-  mountComponent(VNode, container)
+function processComponent(vnode: VNode, container: RendererElement) {
+  mountComponent(vnode, container)
 }
 
-function mountComponent(VNode: VNode, container: RendererElement) {
+function mountComponent(vnode: VNode, container: RendererElement) {
   // 1 : 创建组件实例
-  const instance = createComponentInstance(VNode)
+  const instance = createComponentInstance(vnode)
   // 2 : 安装组件
   setupComponent(instance)
-  setupRenderEffect(instance, VNode, container)
+  // 3 : 开始 patch
+  setupRenderEffect(instance, vnode, container)
 }
 
 function setupRenderEffect(
@@ -89,11 +92,14 @@ function setupRenderEffect(
   container: RendererElement
 ) {
   const { proxy } = instance
-  // 根节点下的 虚拟节点树
+  // 开始执行 render function 生成根节点下的 虚拟节点树
+  // NOTE
+  // 这里通过 call 改变 render 函数中的 this 指向
+  // 详情看
+  // component.ts -> setupStatefulComponent -> instance.proxy = createContext(instance)
   const subTree = instance.render.call(proxy)
-  // vnode -> patch element -> mount element
+  // 转换 vnode -> 真实DOM
   patch(subTree, container)
-
   // 在 patch 完所有的 subTree 后 给当前节点增加 el
   initialVNode.el = subTree.el
 }

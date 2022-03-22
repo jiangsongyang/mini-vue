@@ -37,3 +37,5 @@ export const extend = Object.assign
 
 export const hasChanged = (val: unknown, newVal: unknown) =>
   !Object.is(val, newVal)
+
+export const isElement = (target: any) => target.nodeType === 1

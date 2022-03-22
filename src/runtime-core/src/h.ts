@@ -1,7 +1,10 @@
-import { createVNode, isVNode } from './vnode'
+import { createVNode, isVNode, VNode } from './vnode'
 import { isObj, isArr } from '../../shared'
 
-export function h(type: any, propsOrChildren?: any, children?: any) {
+// 向外暴露的 render 函数 API
+// 目标是创建 VNode
+export function h(type: any, propsOrChildren?: any, children?: any): VNode {
+  // 处理函数入参
   const l = arguments.length
   if (l === 2) {
     if (isObj(propsOrChildren) && !isArr(propsOrChildren)) {
