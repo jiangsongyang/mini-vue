@@ -1,6 +1,7 @@
 import { Ref } from '../../reactivity'
 import { RendererNode, RendererElement } from './renderer'
 import { Data } from './component'
+import { ShapeFlags, isStr, isArr } from '../../shared'
 
 export type VNodeTypes = string | VNode | typeof Text | typeof Comment
 
@@ -36,6 +37,7 @@ export type VNode<
   props: (VNodeProps & ExtraProps) | null
   children: VNodeNormalizedChildren
   el: any
+  shapeFlag: ShapeFlags
 }
 
 export function createVNode(
@@ -50,10 +52,25 @@ export function createVNode(
     type,
     props,
     children,
+    el: null,
+    shapeFlag: getShapeFlag(type),
   }
+
+  if (isStr(children)) {
+    vnode.shapeFlag = vnode.shapeFlag | ShapeFlags.TEXT_CHILDREN
+  }
+  // other
+  else if (isArr(children)) {
+    vnode.shapeFlag = vnode.shapeFlag | ShapeFlags.ARRAY_CHILDREN
+  }
+
   return vnode
 }
 
 export function isVNode(value: any): value is VNode {
   return value ? value.__v_isVNode === true : false
+}
+
+function getShapeFlag(type: VNodeTypes) {
+  return isStr(type) ? ShapeFlags.ELEMENT : ShapeFlags.STATEFUL_COMPONENT
 }
