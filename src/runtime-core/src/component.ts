@@ -3,6 +3,7 @@ import { VNode } from './vnode'
 import { publicInstanceProxyHandler } from './componentPublicInstance'
 import { isFun, isObj } from '../../shared'
 import { initProps } from './componentProps'
+import { initSlots } from './componentSlots'
 import { emit } from './componentEmit'
 
 export type Data = Record<string, unknown>
@@ -13,11 +14,12 @@ export function createComponentInstance(vnode: VNode) {
     type: vnode.type,
     setupResult: {},
     props: {},
+    slots: {},
     emit: () => {},
   }
 
   // 这里使用 bind 是因为
-  // 用户在使用 emit 时 
+  // 用户在使用 emit 时
   // 只需要传入 事件名称
   // 但是我们需要获取组件实例 就使用 bind 通过第二个参数传入
   component.emit = emit.bind(null, component)
@@ -26,9 +28,10 @@ export function createComponentInstance(vnode: VNode) {
 }
 
 export function setupComponent(instance) {
-  // TODO :
+  // 处理 props
   initProps(instance, instance.vnode.props)
-  // 2 : initSlots()
+  // 处理 slots
+  initSlots(instance, instance.vnode.children)
   // 初始化 有状态的 component
   setupStatefulComponent(instance)
 }

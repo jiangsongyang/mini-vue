@@ -33,6 +33,8 @@ export type VNode<
   HostElement = RendererElement,
   ExtraProps = { [key: string]: any }
 > = {
+  // 标记是否是 vnode
+  __v_isVNode: true
   // 该节点的类型
   type: any
   // 该节点的属性
@@ -55,6 +57,7 @@ export function createVNode(
 ): VNode {
   // 初始化 创建 vnode
   const vnode: VNode = {
+    __v_isVNode: true,
     type,
     props,
     children,
@@ -64,10 +67,18 @@ export function createVNode(
 
   // 再根据子节点类型 修改 shapeFlag
   if (isStr(children)) {
-    vnode.shapeFlag = vnode.shapeFlag | ShapeFlags.TEXT_CHILDREN
+    vnode.shapeFlag = vnode.shapeFlag |= ShapeFlags.TEXT_CHILDREN
   } else if (isArr(children)) {
-    vnode.shapeFlag = vnode.shapeFlag | ShapeFlags.ARRAY_CHILDREN
+    vnode.shapeFlag = vnode.shapeFlag |= ShapeFlags.ARRAY_CHILDREN
   }
+
+  // 判断是不是一个 slot children
+  if (vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+    if (typeof children === 'object') {
+      vnode.shapeFlag |= ShapeFlags.SLOTS_CHILDREN
+    }
+  }
+
   return vnode
 }
 
