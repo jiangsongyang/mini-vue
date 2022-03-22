@@ -5,7 +5,7 @@
   "main": "lib/guide-mini-vue.cjs.js",
   "module": "lib/guide-mini-vue.esm.js",
   "scripts": {
-    "dev": "rollup -c rollup.config.js",
+    "dev": "rollup -c rollup.config.js -w",
     "build": "rollup -c rollup.config.js",
     "test": "jest"
   },
