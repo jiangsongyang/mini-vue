@@ -41,3 +41,6 @@ export const hasChanged = (val: unknown, newVal: unknown) =>
 export const isElement = (target: any) => target.nodeType === 1
 
 export const isOn = (target: string) => /^on[A-Z]/.test(target)
+
+export const hasOwn = (value: any, key: string) =>
+  Object.prototype.hasOwnProperty.call(value, key)

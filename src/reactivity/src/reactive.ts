@@ -3,6 +3,7 @@ import {
   readonlyHandlers,
   shallowReadonlyHandlers,
 } from './baseHandlers'
+import { isObj } from '../../shared'
 
 export interface Target {
   [REACTIVE_FLAGS.IS_REACTIVE]?: boolean
@@ -24,6 +25,9 @@ export function readonly<T extends Object>(raw: T) {
 }
 
 function createActiveObject<T extends Object>(raw: T, baseHandlers: any) {
+  if (!isObj(raw)) {
+    console.warn(`target : ${raw} must be a object`)
+  }
   return new Proxy(raw, baseHandlers)
 }
 

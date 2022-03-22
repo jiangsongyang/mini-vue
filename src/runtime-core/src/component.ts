@@ -1,6 +1,8 @@
+import { shallowReadonly } from '../../reactivity'
 import { VNode } from './vnode'
 import { publicInstanceProxyHandler } from './componentPublicInstance'
 import { isFun, isObj } from '../../shared'
+import { initProps } from './componentProps'
 
 export type Data = Record<string, unknown>
 
@@ -9,15 +11,15 @@ export function createComponentInstance(vnode: VNode) {
     vnode,
     type: vnode.type,
     setupResult: {},
+    props: {},
   }
   return component
 }
 
 export function setupComponent(instance) {
   // TODO :
-  // 1 : initProps()
+  initProps(instance, instance.vnode.props)
   // 2 : initSlots()
-
   // 初始化 有状态的 component
   setupStatefulComponent(instance)
 }
@@ -38,7 +40,7 @@ function setupStatefulComponent(instance) {
   // 并且执行 setup
   const { setup } = Component
   if (setup) {
-    const setupResult = setup()
+    const setupResult = setup(shallowReadonly(instance.props))
     // 处理 setup function 的返回值
     handleSetupResult(instance, setupResult)
   }
@@ -67,7 +69,7 @@ function finishComponentSetup(instance) {
   const Component = instance.type
   // 给实例添加 render 方法
   // FIXME
-  // 目前轮子使用方法为 : 
+  // 目前轮子使用方法为 :
   // 必须要用户传入 render function
   instance.render = Component.render
 }
