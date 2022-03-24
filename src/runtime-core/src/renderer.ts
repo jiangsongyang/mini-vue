@@ -1,6 +1,6 @@
 import { createComponentInstance, setupComponent } from './component'
-import { isOn, ShapeFlags } from '../../shared'
-import { VNode } from './vnode'
+import { isArr, isOn, ShapeFlags } from '../../shared'
+import { VNode, Fragment, Text } from './vnode'
 
 export interface RendererNode {
   [key: string]: any
@@ -16,15 +16,27 @@ export function render(initialVNode: VNode, container: RendererElement) {
 // NOTE
 // 核心方法
 function patch(vnode: VNode, container: RendererElement) {
-  const { shapeFlag } = vnode
-  // 判断节点类型
-  if (shapeFlag & ShapeFlags.ELEMENT) {
-    // type === 'div' | 'p' | ...
-    processElement(vnode, container)
-  }
-  // 如果是根组件
-  else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
-    processComponent(vnode, container)
+  const { shapeFlag, type } = vnode
+  switch (type) {
+    case Fragment:
+      processFragment(vnode, container)
+      break
+    case Text:
+      console.log(vnode)
+
+      processText(vnode, container)
+      break
+
+    default:
+      // 判断节点类型
+      if (shapeFlag & ShapeFlags.ELEMENT) {
+        // type === 'div' | 'p' | ...
+        processElement(vnode, container)
+      }
+      // 如果是根组件
+      else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+        processComponent(vnode, container)
+      }
   }
 }
 
@@ -108,4 +120,14 @@ function setupRenderEffect(
   patch(subTree, container)
   // 在 patch 完所有的 subTree 后 给当前节点增加 el
   initialVNode.el = subTree.el
+}
+
+function processFragment(vnode: VNode, container: RendererElement) {
+  mountChild(isArr(vnode) ? vnode : vnode.children, container)
+}
+
+function processText(vnode: VNode, container: RendererElement) {
+  const { children } = vnode
+  const textNode = (vnode.el = document.createTextNode(children as string))
+  container.append(textNode)
 }

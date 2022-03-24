@@ -14,7 +14,6 @@ export function createApp(rootComponent) {
           'mount function only element nodes and selectors can be accepted'
         )
       }
-
       // NOTE
       // 先将组件转换成 vnode
       // 所有的逻辑操作 都是基于 vnode 的

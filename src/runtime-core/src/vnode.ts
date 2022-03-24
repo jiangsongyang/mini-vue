@@ -3,7 +3,15 @@ import { RendererNode, RendererElement } from './renderer'
 import { Data } from './component'
 import { ShapeFlags, isStr, isArr } from '../../shared'
 
-export type VNodeTypes = string | VNode | typeof Text | typeof Comment
+export const Fragment = Symbol('Fragment')
+export const Text = Symbol('Text')
+
+export type VNodeTypes =
+  | string
+  | VNode
+  | typeof Fragment
+  | typeof Text
+  | typeof Comment
 
 export type VNodeRef =
   | string
@@ -88,4 +96,8 @@ function getShapeFlag(type: VNodeTypes) {
 
 export function isVNode(value: any): value is VNode {
   return value ? value.__v_isVNode === true : false
+}
+
+export function createTextVNode(text: string) {
+  return createVNode(Text , {} , text)
 }

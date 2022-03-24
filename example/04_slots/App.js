@@ -1,5 +1,5 @@
 import { Foo } from './Foo.js'
-import { h } from '../../lib/guide-mini-vue.esm.js'
+import { h ,createTextVNode} from '../../lib/guide-mini-vue.esm.js'
 
 // .vue
 // <template></template>
@@ -8,9 +8,9 @@ export const App = {
   render() {
     window.self = this
     // 匿名插槽
-    const Slot = h('p', 'this is slot')
-    const app = h('div', {}, 'App')
-    const foo = h(Foo, {}, Slot)
+    // const Slot = h('p', 'this is slot')
+    // const app = h('div', {}, 'App')
+    // const foo = h(Foo, {}, Slot)
     // 具名插槽
     // const app = h('div', {}, 'App')
     // const foo = h(
@@ -22,15 +22,15 @@ export const App = {
     //   }
     // )
     // 作用域插槽
-    // const app = h('div', {}, 'App')
-    // const foo = h(
-    //   Foo,
-    //   {},
-    //   {
-    //     header: ({age}) => h('div', {}, 'this is header' + age),
-    //     footer: h('div', {}, 'this is footer'),
-    //   }
-    // )
+    const app = h('div', {}, 'App')
+    const foo = h(
+      Foo,
+      {},
+      {
+        header: ({age}) => [h('div', {}, 'this is header' + age) , createTextVNode('this is text')],
+        footer: h('div', {}, 'this is footer'),
+      }
+    )
     return h('div', [app, foo])
   },
   setup() {

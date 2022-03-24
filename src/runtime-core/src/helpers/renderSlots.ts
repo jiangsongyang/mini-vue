@@ -1,5 +1,5 @@
 import { isFun } from '../../../shared'
-import { createVNode } from '../vnode'
+import { createVNode, Fragment, VNodeTypes } from '../vnode'
 
 // 帮助方法
 // 在 render function 中调用这个方法
@@ -10,15 +10,15 @@ export function renderSlots(slots, name, props) {
   if (slot) {
     //作用域插槽
     if (isFun(slot)) {
-      return createVNode('div', {}, slot(props))
-    } 
+      return createVNode(Fragment, {}, slot(props))
+    }
     // 具名插槽
     else {
-      return createVNode('div', {}, slot)
+      return createVNode(Fragment, {}, slot)
     }
   }
   // 匿名插槽
   else {
-    return createVNode('div', {}, slots)
+    return createVNode(Fragment, {}, slots)
   }
 }
