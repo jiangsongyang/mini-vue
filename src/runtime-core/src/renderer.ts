@@ -22,8 +22,6 @@ function patch(vnode: VNode, container: RendererElement) {
       processFragment(vnode, container)
       break
     case Text:
-      console.log(vnode)
-
       processText(vnode, container)
       break
 
@@ -122,10 +120,20 @@ function setupRenderEffect(
   initialVNode.el = subTree.el
 }
 
+// 处理 Fragment 类型的 VNode
+// NOTE
+// 思路 :
+// 直接把对应的 vnode 挂载到 container 内
 function processFragment(vnode: VNode, container: RendererElement) {
   mountChild(isArr(vnode) ? vnode : vnode.children, container)
 }
 
+// 处理 Text 类型的 VNode
+// 这种类型是因为 生成 render 的时候 直接写了 string
+// NOTE
+// 思路 :
+// 拿到 children ( 用户写入的字符串 )
+// 创建节点 直接插入对应 container 内
 function processText(vnode: VNode, container: RendererElement) {
   const { children } = vnode
   const textNode = (vnode.el = document.createTextNode(children as string))

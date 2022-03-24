@@ -52,9 +52,19 @@ function setupStatefulComponent(instance) {
   // 并且执行 setup
   const { setup } = Component
   if (setup) {
+    // NOTE : 
+    // 在这里给 currentInstance 赋值
+    // 可以保证 每次初始化组件的时候 在调用 setup 里面 能获取到组件实例
+    setCurrentInstance(instance)
+    // 开始执行 setup
+    // 传入 props 和  context
     const setupResult = setup(shallowReadonly(instance.props), {
       emit: instance.emit,
     })
+    // reset currentInstance
+    // 这样就能保证 只在 setup 里能拿到当前组件实例了
+    setCurrentInstance(null)
+
     // 处理 setup function 的返回值
     handleSetupResult(instance, setupResult)
   }
@@ -86,4 +96,15 @@ function finishComponentSetup(instance) {
   // 目前轮子使用方法为 :
   // 必须要用户传入 render function
   instance.render = Component.render
+}
+
+// API : getCurrentInstance
+
+let currentInstance = null
+export function getCurrentInstance(){
+  return currentInstance
+}
+
+function setCurrentInstance(instance){
+  currentInstance = instance
 }
