@@ -15,11 +15,11 @@ export function render(initialVNode: VNode, container: RendererElement) {
 
 // NOTE
 // 核心方法
-function patch(vnode: VNode, container: RendererElement) {
+function patch(vnode: VNode, container: RendererElement, parentComponent) {
   const { shapeFlag, type } = vnode
   switch (type) {
     case Fragment:
-      processFragment(vnode, container)
+      processFragment(vnode, container, parentComponent)
       break
     case Text:
       processText(vnode, container)
@@ -29,20 +29,28 @@ function patch(vnode: VNode, container: RendererElement) {
       // 判断节点类型
       if (shapeFlag & ShapeFlags.ELEMENT) {
         // type === 'div' | 'p' | ...
-        processElement(vnode, container)
+        processElement(vnode, container, parentComponent)
       }
       // 如果是根组件
       else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
-        processComponent(vnode, container)
+        processComponent(vnode, container, parentComponent)
       }
   }
 }
 
-function processElement(vnode: VNode, container: RendererElement) {
-  mountElement(vnode, container)
+function processElement(
+  vnode: VNode,
+  container: RendererElement,
+  parentComponent
+) {
+  mountElement(vnode, container, parentComponent)
 }
 
-function mountElement(vnode: VNode, container: RendererElement) {
+function mountElement(
+  vnode: VNode,
+  container: RendererElement,
+  parentComponent
+) {
   // 一个 element 核心的三要素
   // 1 : element type       => div | p | ...
   // 2 : element attributes => class | id | ...
@@ -77,7 +85,7 @@ function mountElement(vnode: VNode, container: RendererElement) {
   }
   // 处理子节点
   if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
-    mountChild(children, el)
+    mountChild(children, el, parentComponent)
   } else if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
     el.textContent = children
   }
@@ -85,17 +93,25 @@ function mountElement(vnode: VNode, container: RendererElement) {
   container.appendChild(el)
 }
 
-function mountChild(vnode: any, container: RendererElement) {
-  vnode.forEach((child: VNode) => patch(child, container))
+function mountChild(vnode: any, container: RendererElement, parentComponent) {
+  vnode.forEach((child: VNode) => patch(child, container, parentComponent))
 }
 
-function processComponent(vnode: VNode, container: RendererElement) {
-  mountComponent(vnode, container)
+function processComponent(
+  vnode: VNode,
+  container: RendererElement,
+  parentComponent
+) {
+  mountComponent(vnode, container, parentComponent)
 }
 
-function mountComponent(vnode: VNode, container: RendererElement) {
+function mountComponent(
+  vnode: VNode,
+  container: RendererElement,
+  parentComponent
+) {
   // 1 : 创建组件实例
-  const instance = createComponentInstance(vnode)
+  const instance = createComponentInstance(vnode, parentComponent)
   // 2 : 安装组件
   setupComponent(instance)
   // 3 : 开始 patch
@@ -115,7 +131,7 @@ function setupRenderEffect(
   // component.ts -> setupStatefulComponent -> instance.proxy = createContext(instance)
   const subTree = instance.render.call(proxy)
   // 转换 vnode -> 真实DOM
-  patch(subTree, container)
+  patch(subTree, container, instance)
   // 在 patch 完所有的 subTree 后 给当前节点增加 el
   initialVNode.el = subTree.el
 }
@@ -124,8 +140,12 @@ function setupRenderEffect(
 // NOTE
 // 思路 :
 // 直接把对应的 vnode 挂载到 container 内
-function processFragment(vnode: VNode, container: RendererElement) {
-  mountChild(isArr(vnode) ? vnode : vnode.children, container)
+function processFragment(
+  vnode: VNode,
+  container: RendererElement,
+  parentComponent
+) {
+  mountChild(isArr(vnode) ? vnode : vnode.children, container, parentComponent)
 }
 
 // 处理 Text 类型的 VNode

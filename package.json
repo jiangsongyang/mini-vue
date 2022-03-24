@@ -4,6 +4,9 @@
   "description": "To implement a mini vue3 for study",
   "main": "lib/guide-mini-vue.cjs.js",
   "module": "lib/guide-mini-vue.esm.js",
+  "engines":{
+    "node": "14.17.1"
+  },
   "scripts": {
     "dev": "rollup -c rollup.config.js -w --sourcemap",
     "build": "rollup -c rollup.config.js",

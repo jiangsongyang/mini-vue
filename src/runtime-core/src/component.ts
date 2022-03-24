@@ -5,16 +5,20 @@ import { isFun, isObj } from '../../shared'
 import { initProps } from './componentProps'
 import { initSlots } from './componentSlots'
 import { emit } from './componentEmit'
+import { initProvides } from './apiInject'
 
 export type Data = Record<string, unknown>
 
-export function createComponentInstance(vnode: VNode) {
+export function createComponentInstance(vnode: VNode, parent) {
+  console.log(parent, 'parent')
   const component = {
     vnode,
     type: vnode.type,
     setupResult: {},
     props: {},
     slots: {},
+    providers: initProvides(parent),
+    parent,
     emit: () => {},
   }
 
@@ -52,7 +56,7 @@ function setupStatefulComponent(instance) {
   // 并且执行 setup
   const { setup } = Component
   if (setup) {
-    // NOTE : 
+    // NOTE :
     // 在这里给 currentInstance 赋值
     // 可以保证 每次初始化组件的时候 在调用 setup 里面 能获取到组件实例
     setCurrentInstance(instance)
@@ -101,10 +105,10 @@ function finishComponentSetup(instance) {
 // API : getCurrentInstance
 
 let currentInstance = null
-export function getCurrentInstance(){
+export function getCurrentInstance() {
   return currentInstance
 }
 
-function setCurrentInstance(instance){
+function setCurrentInstance(instance) {
   currentInstance = instance
 }
