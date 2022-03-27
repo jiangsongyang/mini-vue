@@ -3,86 +3,93 @@ import {
   createTextVNode,
   provide,
   inject,
-} from '../../lib/guide-mini-vue.esm.js'
+} from "../../lib/guide-mini-vue.esm.js";
 
 // base test
 const Provider = {
-  name: 'Provider',
+  name: "Provider",
   setup() {
-    provide('foo', 'fooValue')
-    provide('bar', 'barValue')
+    provide("foo", "fooValue");
+    provide("bar", "barValue");
   },
   render() {
-    return h('div', {}, [createTextVNode('this is Provider'), h(ProviderTwo)])
+    return h("div", {}, [createTextVNode("this is Provider"), h(ProviderTwo)]);
   },
-}
+};
 
-// test more than tier 
+// test more than tier
 const ProviderTwo = {
-  name: 'ProviderTwo',
+  name: "ProviderTwo",
   setup() {},
   render() {
-    return h('div', {}, [createTextVNode('this is ProviderTwo'), h(ProviderThree)])
+    return h("div", {}, [
+      createTextVNode("this is ProviderTwo"),
+      h(ProviderThree),
+    ]);
   },
-}
+};
 
 // test provide() from different tier
 const ProviderThree = {
-  name: 'ProviderThree',
+  name: "ProviderThree",
   setup() {
-    provide('cool', 'coolValue -- ProviderThree')
+    provide("cool", "coolValue -- ProviderThree");
   },
   render() {
-    return h('div', {}, [createTextVNode('this is ProviderThree'), h(ProviderFour)])
+    return h("div", {}, [
+      createTextVNode("this is ProviderThree"),
+      h(ProviderFour),
+    ]);
   },
-}
+};
 
 // test same provide key
 const ProviderFour = {
-  name: 'ProviderFour',
+  name: "ProviderFour",
   setup() {
-    const parentCool = inject('cool')
-    provide('cool', 'coolValue -- ProviderFour')
+    const parentCool = inject("cool");
+    provide("cool", "coolValue -- ProviderFour");
     return {
-      parentCool
-    }
+      parentCool,
+    };
   },
   render() {
-    return h('div', {}, [createTextVNode(`this is ProviderFour parentCool : ${this.parentCool}`), h(Consumer)])
+    return h("div", {}, [
+      createTextVNode(`this is ProviderFour parentCool : ${this.parentCool}`),
+      h(Consumer),
+    ]);
   },
-}
+};
 
 const Consumer = {
-  name: 'Consumer',
+  name: "Consumer",
   setup() {
-    const foo = inject('foo')
-    const bar = inject('bar')
-    const cool = inject('cool')
+    const foo = inject("foo");
+    const bar = inject("bar");
+    const cool = inject("cool");
     return {
       foo,
       bar,
-      cool
-    }
+      cool,
+    };
   },
   render() {
     return h(
-      'div',
+      "div",
       {},
       `this is Consumer - foo : ${this.foo} - bar : ${this.bar} - cool : ${this.cool}`
-    )
+    );
   },
-}
+};
 
 export const App = {
-  name: 'App',
+  name: "App",
   setup() {},
   render() {
-    window.self = this
-    return h('div', {}, ['213', h(Provider)])
+    window.self = this;
+    return h("div", {}, ["213", h(Provider)]);
   },
-}
-
-
+};
 
 // const Provider = {
 //   name: "Provider",

@@ -10,14 +10,13 @@ import { initProvides } from './apiInject'
 export type Data = Record<string, unknown>
 
 export function createComponentInstance(vnode: VNode, parent) {
-  console.log(parent, 'parent')
   const component = {
     vnode,
     type: vnode.type,
     setupResult: {},
     props: {},
     slots: {},
-    providers: initProvides(parent),
+    provides: initProvides(parent),
     parent,
     emit: () => {},
   }
@@ -33,9 +32,13 @@ export function createComponentInstance(vnode: VNode, parent) {
 
 export function setupComponent(instance) {
   // 处理 props
+  console.log('开始处理 props');
   initProps(instance, instance.vnode.props)
+
   // 处理 slots
+  console.log('开始处理 slots');
   initSlots(instance, instance.vnode.children)
+
   // 初始化 有状态的 component
   setupStatefulComponent(instance)
 }
@@ -62,9 +65,13 @@ function setupStatefulComponent(instance) {
     setCurrentInstance(instance)
     // 开始执行 setup
     // 传入 props 和  context
+    console.log('**********************************');
+    console.log('开始执行 setup');
+    console.log('**********************************');
     const setupResult = setup(shallowReadonly(instance.props), {
       emit: instance.emit,
     })
+    console.log('setup的返回值为 : ', setupResult);
     // reset currentInstance
     // 这样就能保证 只在 setup 里能拿到当前组件实例了
     setCurrentInstance(null)

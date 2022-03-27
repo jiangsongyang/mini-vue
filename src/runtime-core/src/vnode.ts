@@ -55,10 +55,8 @@ export type VNode<
   shapeFlag: ShapeFlags
 }
 
+// 创建 vnode
 export function createVNode(
-  // type: VNodeTypes,
-  // props: (Data & VNodeProps) | null = null,
-  // children: VNodeNormalizedChildren
   type: VNodeTypes,
   props: (Data & VNodeProps) | null = null,
   children?: any

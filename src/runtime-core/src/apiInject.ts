@@ -6,7 +6,7 @@ export function provide<T>(key: string, value: T) {
   // NOTE
   // provide 只能在 setup 中使用
   if (currentInstance) {
-    currentInstance.providers[key] = value
+    currentInstance.provides[key] = value
   } else {
     console.warn('provide only can be called in setup')
   }
@@ -18,7 +18,7 @@ export function inject<T>(key: string, DefaultValue: T) {
   // NOTE
   // inject 只能在 setup 中使用
   if (currentInstance) {
-    return currentInstance.parent.providers[key] || DefaultValue
+    return currentInstance.parent.provides[key] || DefaultValue
   } else {
     console.warn('inject only can be called in setup')
     return false
