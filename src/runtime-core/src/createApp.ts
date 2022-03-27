@@ -25,6 +25,7 @@ export function createAppApi(render) {
         console.log('创建的根组件vnode : ', vnode);
         // 拿到 vnode 后 执行 render(vue内部实现的 render 方法, 不是 render 函数)
         render(vnode, rootContainer);
+        console.log('render 方法执行完毕');
       },
     };
   };

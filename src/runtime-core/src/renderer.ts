@@ -164,6 +164,7 @@ export function createRenderer(options) {
     // 这里通过 call 改变 render 函数中的 this 指向
     // 详情看
     // component.ts -> setupStatefulComponent -> instance.proxy = createContext(instance)
+    console.log('开始调用 render ：');
     const subTree = instance.render.call(proxy);
     console.log('调用组件实例的 render function 生成 vnode 树 ：', subTree);
     // 转换 vnode -> 真实DOM
