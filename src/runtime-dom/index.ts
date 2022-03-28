@@ -31,12 +31,11 @@ function setText(node, text) {
   node.nodeValue = text;
 }
 
-function setElementText(el, text) {
-  console.log("SetElementText", el, text);
+export function setElementText(el, text) {
   el.textContent = text;
 }
 
-function remove(child) {
+export function remove(child) {
   const parent = child.parentNode;
   if (parent) {
     parent.removeChild(child);

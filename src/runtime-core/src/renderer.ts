@@ -3,7 +3,6 @@ import { isArr, isOn, ShapeFlags } from "../../shared";
 import { VNode, Fragment, Text } from "./vnode";
 import { createAppApi } from "./createApp";
 import { effect } from "../../reactivity";
-import { patchProp as hostPatchProp } from "../../runtime-dom";
 
 export interface RendererNode {
   [key: string]: any;
@@ -16,7 +15,13 @@ export interface RendererElement extends RendererNode {}
 export function createRenderer(options) {
   console.log("渲染器传入的渲染器渲染方法为 : ", options);
   // 解构出来渲染方法
-  const { patchProp, insert } = options;
+  const {
+    patchProp,
+    insert,
+    patchProp: hostPatchProp,
+    remove: hostRemove,
+    setElementText: hostSetElementText,
+  } = options;
   function render(initialVNode: VNode, container: RendererElement) {
     console.log("**********************************");
     console.log("----- runtime-core 内部 render 开始执行 -----");
@@ -126,7 +131,7 @@ export function createRenderer(options) {
     // 处理子节点
     if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
       console.log("当前子节点是一个数组", children, shapeFlag);
-      mountChild(children, el, parentComponent);
+      mountChildren(children, el, parentComponent);
     } else if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
       console.log("当前子节点是一个文本 内容是 : ", children, shapeFlag);
       el.textContent = children;
@@ -138,12 +143,12 @@ export function createRenderer(options) {
   }
 
   // 挂载子节点
-  function mountChild(
-    vnode: VNode,
+  function mountChildren(
+    children,
     container: RendererElement,
     parentComponent
   ) {
-    vnode.forEach((child: VNode) =>
+    children.forEach((child: VNode) =>
       patch(null, child, container, parentComponent)
     );
   }
@@ -159,7 +164,7 @@ export function createRenderer(options) {
     console.log("old el: ", n1);
     console.log("new el: ", n2);
     // 给 n2 添加 el 属性
-    // 因为 : 
+    // 因为 :
     // 下次再进入更新时 n2 已经变成了 oldVNode , 也就是 n1
     const el = (n2.el = n1.el);
 
@@ -169,6 +174,7 @@ export function createRenderer(options) {
     patchProps(el, oldProps, newProps);
 
     // 2 . patch children
+    patchChildren(n1, n2, el, parentComponent);
   }
 
   // 更新 props 有三种情况
@@ -201,6 +207,52 @@ export function createRenderer(options) {
       if (!(key in newProps)) {
         hostPatchProp(el, key, oldProps[key], null);
       }
+    }
+  }
+
+  // 更新子节点有四种情况
+  // 1 . 老节点中 子元素为 array ，新节点中 子元素为 text
+  // 2 . 老节点中 子元素为 text ，新节点中 子元素为 text
+  // 3 . 老节点中 子元素为 text ，新节点中 子元素为 array
+  // 4 . 老节点中 子元素为 array ，新节点中 子元素为 array
+  function patchChildren(n1: VNode, n2: VNode, container, parentComponent) {
+    const prevShapeFlag = n1.shapeFlag;
+    const newShapeFlag = n2.shapeFlag;
+
+    const c1 = n1.children;
+    const c2 = n2.children;
+
+    if (newShapeFlag & ShapeFlags.TEXT_CHILDREN) {
+      if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+        // 老节点中 子元素为 array ，新节点中 子元素为 text
+        // TODO :
+        // 1 . 把老的节点里面的子元素清空
+        unmountChildren(n1.children);
+        // 2 . 设置新的 text , 插入
+        hostSetElementText(container, c2);
+      } else if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
+        // 老节点中 子元素为 text ，新节点中 子元素为 text
+        // TODO :
+        // 1 . 值不相等 直接替换
+        if (c1 !== c2) {
+          hostSetElementText(container, c2);
+        }
+      }
+    } else if (newShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+      if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
+        // 老节点中 子元素为 text ，新节点中 子元素为 array
+        // TODO :
+        // 1 . 先把老节点中的文本清空
+        hostSetElementText(container, "");
+        mountChildren(c2, container, parentComponent);
+      }
+    }
+  }
+
+  function unmountChildren(children) {
+    for (let index = 0; index < children.length; index++) {
+      const el = children[index].el;
+      hostRemove(el);
     }
   }
 
@@ -278,7 +330,7 @@ export function createRenderer(options) {
     container: RendererElement,
     parentComponent
   ) {
-    mountChild(isArr(n2) ? n2 : n2.children, container, parentComponent);
+    mountChildren(isArr(n2) ? n2 : n2.children, container, parentComponent);
   }
 
   // 处理 Text 类型的 VNode

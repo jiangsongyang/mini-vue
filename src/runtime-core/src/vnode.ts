@@ -1,27 +1,27 @@
-import { Ref } from '../../reactivity'
-import { RendererNode, RendererElement } from './renderer'
-import { Data } from './component'
-import { ShapeFlags, isStr, isArr } from '../../shared'
+import { Ref } from "../../reactivity";
+import { RendererNode, RendererElement } from "./renderer";
+import { Data } from "./component";
+import { ShapeFlags, isStr, isArr } from "../../shared";
 
-export const Fragment = Symbol('Fragment')
-export const Text = Symbol('Text')
+export const Fragment = Symbol("Fragment");
+export const Text = Symbol("Text");
 
 export type VNodeTypes =
   | string
   | VNode
   | typeof Fragment
   | typeof Text
-  | typeof Comment
+  | typeof Comment;
 
 export type VNodeRef =
   | string
   | Ref
-  | ((ref: object | null, refs: Record<string, any>) => void)
+  | ((ref: object | null, refs: Record<string, any>) => void);
 
 export type VNodeProps = {
-  key?: string | number
-  ref?: VNodeRef
-}
+  key?: string | number;
+  ref?: VNodeRef;
+};
 
 type VNodeChildAtom =
   | VNode
@@ -30,11 +30,11 @@ type VNodeChildAtom =
   | boolean
   | null
   | undefined
-  | void
+  | void;
 
-export type VNodeNormalizedChildren = string | VNodeArrayChildren | null
+export type VNodeNormalizedChildren = string | VNodeArrayChildren | null;
 
-export type VNodeArrayChildren = Array<VNodeArrayChildren | VNodeChildAtom>
+export type VNodeArrayChildren = Array<VNodeArrayChildren | VNodeChildAtom>;
 
 export type VNode<
   HostNode = RendererNode,
@@ -42,21 +42,23 @@ export type VNode<
   ExtraProps = { [key: string]: any }
 > = {
   // 标记是否是 vnode
-  __v_isVNode: true
+  __v_isVNode: true;
   // 该节点的类型
-  type: any
+  type: any;
   // 该节点的属性
-  props: (VNodeProps & ExtraProps) | null
+  props: (VNodeProps & ExtraProps) | null;
   // 该节点下的子节点
-  children: VNodeNormalizedChildren
+  children: VNodeNormalizedChildren;
   // vnode对应的真实DOM
-  el: any
+  el: any;
   // 用于区分该 vnode 是什么形态
-  shapeFlag: ShapeFlags
-}
+  shapeFlag: ShapeFlags;
+};
 
-// 创建 vnode
 export function createVNode(
+  // type: VNodeTypes,
+  // props: (Data & VNodeProps) | null = null,
+  // children: VNodeNormalizedChildren
   type: VNodeTypes,
   props: (Data & VNodeProps) | null = null,
   children?: any
@@ -69,33 +71,33 @@ export function createVNode(
     children,
     el: null,
     shapeFlag: getShapeFlag(type), // 先根据 type 初始化 shapeFlag
-  }
+  };
 
   // 再根据子节点类型 修改 shapeFlag
   if (isStr(children)) {
-    vnode.shapeFlag = vnode.shapeFlag |= ShapeFlags.TEXT_CHILDREN
+    vnode.shapeFlag |= ShapeFlags.TEXT_CHILDREN;
   } else if (isArr(children)) {
-    vnode.shapeFlag = vnode.shapeFlag |= ShapeFlags.ARRAY_CHILDREN
+    vnode.shapeFlag |= ShapeFlags.ARRAY_CHILDREN;
   }
 
   // 判断是不是一个 slot children
   if (vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
-    if (typeof children === 'object') {
-      vnode.shapeFlag |= ShapeFlags.SLOTS_CHILDREN
+    if (typeof children === "object") {
+      vnode.shapeFlag |= ShapeFlags.SLOTS_CHILDREN;
     }
   }
 
-  return vnode
+  return vnode;
 }
 
 function getShapeFlag(type: VNodeTypes) {
-  return isStr(type) ? ShapeFlags.ELEMENT : ShapeFlags.STATEFUL_COMPONENT
+  return isStr(type) ? ShapeFlags.ELEMENT : ShapeFlags.STATEFUL_COMPONENT;
 }
 
 export function isVNode(value: any): value is VNode {
-  return value ? value.__v_isVNode === true : false
+  return value ? value.__v_isVNode === true : false;
 }
 
 export function createTextVNode(text: string) {
-  return createVNode(Text , {} , text)
+  return createVNode(Text, {}, text);
 }
