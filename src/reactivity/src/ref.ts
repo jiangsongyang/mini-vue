@@ -78,7 +78,7 @@ export function isRef(r: any): boolean {
 }
 
 export function unRef(raw: any): boolean {
-  return isRef(raw) ? raw._rawValue : raw
+  return isRef(raw) ? raw.value : raw
 }
 
 // 为什么在 <template> 中读取 ref 不需要 ref.value

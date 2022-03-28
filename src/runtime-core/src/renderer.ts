@@ -2,6 +2,7 @@ import { createComponentInstance, setupComponent } from "./component";
 import { isArr, isOn, ShapeFlags } from "../../shared";
 import { VNode, Fragment, Text } from "./vnode";
 import { createAppApi } from "./createApp";
+import { effect } from "../../reactivity";
 
 export interface RendererNode {
   [key: string]: any;
@@ -22,52 +23,67 @@ export function createRenderer(options) {
     console.log("initialVNode : ", initialVNode);
 
     // 调用 patch
-    patch(initialVNode, container, null);
+    patch(null, initialVNode, container, null);
   }
 
   // NOTE
   // 核心方法
-  function patch(vnode: VNode, container: RendererElement, parentComponent) {
+  // n1 : oldVNode
+  // n2 : newVNode
+  // container : 渲染的容器
+  // parentComponent : 父组件
+  function patch(
+    n1: VNode | null,
+    n2: VNode,
+    container: RendererElement,
+    parentComponent
+  ) {
     console.log("**********************************");
     console.log("----- 开始 patch -----");
     console.log("**********************************");
 
-    const { shapeFlag, type } = vnode;
+    const { shapeFlag, type } = n2;
     switch (type) {
       case Fragment:
-        console.log("当前 vnode 类型为 Fragment : ", vnode, type);
-        processFragment(vnode, container, parentComponent);
+        console.log("当前 vnode 类型为 Fragment : ", n2, type);
+        processFragment(n1, n2, container, parentComponent);
         break;
       case Text:
-        console.log("当前 vnode 类型为 Text : ", vnode, type);
-        processText(vnode, container);
+        console.log("当前 vnode 类型为 Text : ", n2, type);
+        processText(n1, n2, container);
         break;
       default:
         // 判断节点类型
         if (shapeFlag & ShapeFlags.ELEMENT) {
-          console.log("当前 shapeFlag 类型为 ELEMENT : ", vnode, shapeFlag);
+          console.log("当前 shapeFlag 类型为 ELEMENT : ", n2, shapeFlag);
           // type === 'div' | 'p' | ...
-          processElement(vnode, container, parentComponent);
+          processElement(n1, n2, container, parentComponent);
         }
         // 如果是根组件
         else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
           console.log(
             "当前 shapeFlag 类型为 STATEFUL_COMPONENT : ",
-            vnode,
+            n2,
             shapeFlag
           );
-          processComponent(vnode, container, parentComponent);
+          processComponent(n1, n2, container, parentComponent);
         }
     }
   }
 
+  // --------------------------------------------------------------------------
   // 处理 element
   function processElement(
-    vnode: VNode,
+    n1: VNode | null,
+    n2: VNode,
     container: RendererElement,
     parentComponent
   ) {
-    mountElement(vnode, container, parentComponent);
+    if (!n1) {
+      mountElement(n2, container, parentComponent);
+    } else {
+      patchElement(n1, n2, container, parentComponent);
+    }
   }
 
   // 挂载 element
@@ -116,24 +132,45 @@ export function createRenderer(options) {
     }
 
     // 挂载
-    console.log('插入到父级节点 :', container);
+    console.log("插入到父级节点 :", container);
     insert(el, container);
   }
 
   // 挂载子节点
-  function mountChild(vnode: any, container: RendererElement, parentComponent) {
-    vnode.forEach((child: VNode) => patch(child, container, parentComponent));
-  }
-
-  // 处理组件
-  function processComponent(
+  function mountChild(
     vnode: VNode,
     container: RendererElement,
     parentComponent
   ) {
-    console.log('开始处理根组件' , vnode);
-    mountComponent(vnode, container, parentComponent);
-    console.log('处理组件结束' , vnode);
+    vnode.forEach((child: VNode) =>
+      patch(null, child, container, parentComponent)
+    );
+  }
+
+  // 处理更新元素
+  function patchElement(
+    n1: VNode,
+    n2: VNode,
+    container: RendererElement,
+    parentComponent
+  ) {
+    //
+    console.log("更新元素: ");
+    console.log("old : ", n1);
+    console.log("new : ", n2);
+  }
+
+  // --------------------------------------------------------------------------
+  // 处理组件
+  function processComponent(
+    n1: VNode | null,
+    n2: VNode,
+    container: RendererElement,
+    parentComponent
+  ) {
+    console.log("开始处理根组件", n2);
+    mountComponent(n2, container, parentComponent);
+    console.log("处理组件结束", n2);
   }
 
   // 挂载组件
@@ -158,19 +195,33 @@ export function createRenderer(options) {
     initialVNode: VNode,
     container: RendererElement
   ) {
-    const { proxy } = instance;
-    // 开始执行 render function 生成根节点下的 虚拟节点树
-    // NOTE
-    // 这里通过 call 改变 render 函数中的 this 指向
-    // 详情看
-    // component.ts -> setupStatefulComponent -> instance.proxy = createContext(instance)
-    console.log('开始调用 render :');
-    const subTree = instance.render.call(proxy);
-    console.log('调用组件实例的 render function 生成 vnode 树 :', subTree);
-    // 转换 vnode -> 真实DOM
-    patch(subTree, container, instance);
-    // 在 patch 完所有的 subTree 后 给当前节点增加 el
-    initialVNode.el = subTree.el;
+    effect(() => {
+      const { proxy } = instance;
+      if (!instance.isMounted) {
+        // 初始化
+        // 开始执行 render function 生成根节点下的 虚拟节点树
+        // NOTE
+        // 这里通过 call 改变 render 函数中的 this 指向
+        // 详情看
+        // component.ts -> setupStatefulComponent -> instance.proxy = createContext(instance)
+        console.log("开始调用 render :");
+        const subTree = (instance.subTree = instance.render.call(proxy));
+        console.log("调用组件实例的 render function 生成 vnode 树 :", subTree);
+        // 转换 vnode -> 真实DOM
+        patch(null, subTree, container, instance);
+        // 在 patch 完所有的 subTree 后 给当前节点增加 el
+        initialVNode.el = subTree.el;
+        instance.isMounted = true;
+      } else {
+        // 更新
+        const prevSubTree = instance.subTree;
+        const subTree = (instance.subTree = instance.render.call(proxy));
+        console.log("**********************************");
+        console.log("开始更新");
+        console.log("**********************************");
+        patch(prevSubTree, subTree, container, instance);
+      }
+    });
   }
 
   // 处理 Fragment 类型的 VNode
@@ -178,15 +229,12 @@ export function createRenderer(options) {
   // 思路 :
   // 直接把对应的 vnode 挂载到 container 内
   function processFragment(
-    vnode: VNode,
+    n1: VNode | null,
+    n2: VNode,
     container: RendererElement,
     parentComponent
   ) {
-    mountChild(
-      isArr(vnode) ? vnode : vnode.children,
-      container,
-      parentComponent
-    );
+    mountChild(isArr(n2) ? n2 : n2.children, container, parentComponent);
   }
 
   // 处理 Text 类型的 VNode
@@ -195,9 +243,13 @@ export function createRenderer(options) {
   // 思路 :
   // 拿到 children ( 用户写入的字符串 )
   // 创建节点 直接插入对应 container 内
-  function processText(vnode: VNode, container: RendererElement) {
-    const { children } = vnode;
-    const textNode = (vnode.el = document.createTextNode(children as string));
+  function processText(
+    n1: VNode | null,
+    n2: VNode,
+    container: RendererElement
+  ) {
+    const { children } = n2;
+    const textNode = (n2.el = document.createTextNode(children as string));
     container.append(textNode);
   }
 
