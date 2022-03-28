@@ -158,15 +158,17 @@ export function createRenderer(options) {
     console.log("开始更新 element");
     console.log("old el: ", n1);
     console.log("new el: ", n2);
+    // 给 n2 添加 el 属性
+    // 因为 : 
+    // 下次再进入更新时 n2 已经变成了 oldVNode , 也就是 n1
+    const el = (n2.el = n1.el);
 
     const oldProps = n1.props || {};
     const newProps = n2.props || {};
-
-    const el = (n2.el = n1.el);
-    // 1 . update props
+    // 1 . patch props
     patchProps(el, oldProps, newProps);
 
-    // 2 . update children
+    // 2 . patch children
   }
 
   // 更新 props 有三种情况
