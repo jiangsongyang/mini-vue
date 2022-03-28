@@ -5,13 +5,17 @@ export function createElement(type: string) {
   return document.createElement(type);
 }
 
-export function patchProp(el, prop, propValue) {
+export function patchProp(el, prop, prevValue, nextValue) {
   // 绑定事件
   if (isOn(prop)) {
     const eventType = prop.slice(2).toLowerCase();
-    el.addEventListener(eventType, propValue);
+    el.addEventListener(eventType, nextValue);
   } else {
-    el.setAttribute(prop, propValue);
+    if (nextValue === undefined || nextValue === null) {
+      el.removeAttribute(prop, nextValue);
+    } else {
+      el.setAttribute(prop, nextValue);
+    }
   }
 }
 
@@ -65,9 +69,9 @@ function ensureRenderer() {
 
 // dom 平台的入口
 export function createApp(...arg) {
-  console.log('**********************************');
-  console.log('----- 当前渲染器环境为 : runtime-dom -----');
-  console.log('**********************************');
+  console.log("**********************************");
+  console.log("----- 当前渲染器环境为 : runtime-dom -----");
+  console.log("**********************************");
   console.log("根组件传入参数为 : ", ...arg);
   // 创建渲染器
   // 渲染器会返回 { createApp : runtime-core -> createAppApi }

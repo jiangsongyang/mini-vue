@@ -3,6 +3,7 @@ import { isArr, isOn, ShapeFlags } from "../../shared";
 import { VNode, Fragment, Text } from "./vnode";
 import { createAppApi } from "./createApp";
 import { effect } from "../../reactivity";
+import { patchProp as hostPatchProp } from "../../runtime-dom";
 
 export interface RendererNode {
   [key: string]: any;
@@ -118,7 +119,7 @@ export function createRenderer(options) {
     // 处理 props
     for (const prop in props) {
       const propValue = props[prop];
-      patchProp(el, prop, propValue);
+      patchProp(el, prop, null, propValue);
     }
     console.log("处理 props 后的元素为 : ", el);
 
@@ -154,10 +155,51 @@ export function createRenderer(options) {
     container: RendererElement,
     parentComponent
   ) {
-    //
-    console.log("更新元素: ");
-    console.log("old : ", n1);
-    console.log("new : ", n2);
+    console.log("开始更新 element");
+    console.log("old el: ", n1);
+    console.log("new el: ", n2);
+
+    const oldProps = n1.props || {};
+    const newProps = n2.props || {};
+
+    const el = (n2.el = n1.el);
+    // 1 . update props
+    patchProps(el, oldProps, newProps);
+
+    // 2 . update children
+  }
+
+  // 更新 props 有三种情况
+  // 1 . 如果 n1 和 n2 props 都有值 ， 但是 value 不一样
+  // example :
+  //    old : <p id='a'></p>
+  //    new : <p id='b'></p>
+  // 这种情况用新的 props 替换旧的 props
+  // 2 . 如果 n2 props 没有值 （ null ｜ undefined ），但是 n1 props 有值
+  // example :
+  //    old : <p id='a'></p>
+  //    new : <p id='null | undefined'></p>
+  // 这种情况需要删除属性
+  // 3 . 如果 n2 props 没有这个属性了，但是 n1 props 有
+  // example :
+  //    old : <p id='a'></p>
+  //    new : <p></p>
+  // 这种情况需要删除属性
+  function patchProps(el, oldProps, newProps) {
+    // 1 && 2
+    for (const key in newProps) {
+      const prevProp = oldProps[key];
+      const nextProp = newProps[key];
+      if (prevProp !== newProps) {
+        hostPatchProp(el, key, prevProp, nextProp);
+      }
+    }
+    // 3
+    for (const key in oldProps) {
+      if (!(key in newProps)) {
+        hostPatchProp(el, key, oldProps[key], null);
+      }
+    }
   }
 
   // --------------------------------------------------------------------------
