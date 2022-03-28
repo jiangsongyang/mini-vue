@@ -244,7 +244,12 @@ export function createRenderer(options) {
         // TODO :
         // 1 . 先把老节点中的文本清空
         hostSetElementText(container, "");
+        // 2 . 把新节点中的子元素插入
         mountChildren(c2, container, parentComponent);
+      } else if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+        // 老节点中 子元素为 array ，新节点中 子元素为 array
+        // TODO :
+        // ...
       }
     }
   }
