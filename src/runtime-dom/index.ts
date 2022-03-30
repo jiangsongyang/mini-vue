@@ -19,8 +19,8 @@ export function patchProp(el, prop, prevValue, nextValue) {
   }
 }
 
-export function insert(el, container) {
-  container.appendChild(el);
+export function insert(child, container, anchor = null) {
+  container.insertBefore(child, anchor);
 }
 
 function createText(text) {

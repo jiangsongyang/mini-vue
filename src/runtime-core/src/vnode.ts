@@ -53,6 +53,7 @@ export type VNode<
   el: any;
   // 用于区分该 vnode 是什么形态
   shapeFlag: ShapeFlags;
+  key: string | number | undefined;
 };
 
 export function createVNode(
@@ -70,6 +71,7 @@ export function createVNode(
     props,
     children,
     el: null,
+    key: props?.key,
     shapeFlag: getShapeFlag(type), // 先根据 type 初始化 shapeFlag
   };
 
@@ -100,4 +102,10 @@ export function isVNode(value: any): value is VNode {
 
 export function createTextVNode(text: string) {
   return createVNode(Text, {}, text);
+}
+
+export function isSameVNodeType(n1: VNode, n2: VNode) {
+  // type
+  // key
+  return n1.type === n2.type && n1.key === n2.key;
 }
