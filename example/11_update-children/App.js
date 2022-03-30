@@ -151,22 +151,22 @@ import { h, ref } from "../../lib/guide-mini-vue.esm.js";
 // // 需要删除
 // // old :  a , b , ( c  , d , e ) , f , g
 // // new :  a , b , ( c ) , f , g
-const prevChildren = [
-  h("div", { key: "A" }, "A"),
-  h("div", { key: "B" }, "B"),
-  h("div", { key: "C", id: "c-prev" }, "C"),
-  h("div", { key: "D" }, "D"),
-  h("div", { key: "E" }, "E"),
-  h("div", { key: "F" }, "F"),
-  h("div", { key: "G" }, "G"),
-];
-const nextChildren = [
-  h("div", { key: "A" }, "A"),
-  h("div", { key: "B" }, "B"),
-  h("div", { key: "C", id: "c-next" }, "C"),
-  h("div", { key: "F" }, "F"),
-  h("div", { key: "G" }, "G"),
-];
+// const prevChildren = [
+//   h("div", { key: "A" }, "A"),
+//   h("div", { key: "B" }, "B"),
+//   h("div", { key: "C", id: "c-prev" }, "C"),
+//   h("div", { key: "D" }, "D"),
+//   h("div", { key: "E" }, "E"),
+//   h("div", { key: "F" }, "F"),
+//   h("div", { key: "G" }, "G"),
+// ];
+// const nextChildren = [
+//   h("div", { key: "A" }, "A"),
+//   h("div", { key: "B" }, "B"),
+//   h("div", { key: "C", id: "c-next" }, "C"),
+//   h("div", { key: "F" }, "F"),
+//   h("div", { key: "G" }, "G"),
+// ];
 
 // // 需要追加
 // //  old :  a , b , ( c ) , f , g
@@ -187,6 +187,53 @@ const nextChildren = [
 //   h("div", { key: "F" }, "F"),
 //   h("div", { key: "G" }, "G"),
 // ];
+
+// // 需要移动
+// // 计算最长递增子序列
+// // old :  a , b , ( c , d , e ) , f , g
+// // new :  a , b , ( e , d , c ) , f , g
+// const prevChildren = [
+//   h("div", { key: "A" }, "A"),
+//   h("div", { key: "B" }, "B"),
+//   h("div", { key: "C", id: "c-prev" }, "C"),
+//   h("div", { key: "D" }, "D"),
+//   h("div", { key: "E" }, "E"),
+//   h("div", { key: "F" }, "F"),
+//   h("div", { key: "G" }, "G"),
+// ];
+// const nextChildren = [
+//   h("div", { key: "A" }, "A"),
+//   h("div", { key: "B" }, "B"),
+//   h("div", { key: "E" }, "E"),
+//   h("div", { key: "C", id: "c-next" }, "C"),
+//   h("div", { key: "D" }, "D"),
+//   h("div", { key: "F" }, "F"),
+//   h("div", { key: "G" }, "G"),
+// ];
+
+// // 综合的例子
+// // a , b , ( c , d , e , z ) , f , g
+// // a , b , ( c , d , y , e ) , f , g
+const prevChildren = [
+  h("div", { key: "A" }, "A"),
+  h("div", { key: "B" }, "B"),
+  h("div", { key: "C", id: "c-prev" }, "C"),
+  h("div", { key: "D" }, "D"),
+  h("div", { key: "E" }, "E"),
+  h("div", { key: "Z" }, "Z"),
+  h("div", { key: "F" }, "F"),
+  h("div", { key: "G" }, "G"),
+];
+const nextChildren = [
+  h("div", { key: "A" }, "A"),
+  h("div", { key: "B" }, "B"),
+  h("div", { key: "C", id: "c-next" }, "C"),
+  h("div", { key: "D" }, "D"),
+  h("div", { key: "Y" }, "Y"),
+  h("div", { key: "E" }, "E"),
+  h("div", { key: "F" }, "F"),
+  h("div", { key: "G" }, "G"),
+];
 
 export default {
   name: "App",

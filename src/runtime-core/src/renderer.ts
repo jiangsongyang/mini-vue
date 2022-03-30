@@ -366,6 +366,13 @@ export function createRenderer(options) {
       // 当前处理过的节点的次数
       let patched = 0;
 
+      // 创建索引映射
+      const newIndexToOldIndexMap = new Array(toBePatched);
+      // 初始化索引
+      for (let i = 0; i < toBePatched; i++) {
+        newIndexToOldIndexMap[i] = 0;
+      }
+
       // 根据 i 和 e2 创建映射表
       // 映射 key 和 i
       // NOTE :
@@ -387,7 +394,7 @@ export function createRenderer(options) {
         // 如果 当前处理过的次数 大于等于 需要处理的次数
         // old :  a , b , ( c  , d , e ) , f , g
         // new :  a , b , ( c ) , f , g
-        // 这种场景就是 
+        // 这种场景就是
         // 当前处理了两次 old c ， old d
         // 但是总共只需要一次 new c
         // 直接把 c 后面的节点删除就可以了
@@ -418,11 +425,49 @@ export function createRenderer(options) {
         if (newIndex === undefined) {
           hostRemove(prevChild.el);
         }
-        // 如果存在的话 就继续去 patch
+        // 如果存在的话
+        // 处理移动
+        // 就继续去 patch
         // 对该节点进行深度对比
         else {
+          // i + 1 是因为防止 i 是 0
+          // 0 在映射表里代表 没有被映射
+          // 如果没有被映射 应该被创建
+          newIndexToOldIndexMap[newIndex - s2] = i + 1;
           patch(prevChild, c2[newIndex], container, parentComponent, null);
           patched++;
+        }
+      }
+
+      // 开始生成 最长递增子序列
+      // old :  a , b , ( c , d , e ) , f , g
+      // new :  a , b , ( e , c , d ) , f , g
+      // 子序列为 [ 2 , 3 ]
+      const increasingNewIndexSequence = getSequence(newIndexToOldIndexMap);
+      // 子序列的指针
+      let j = increasingNewIndexSequence.length - 1;
+      // 倒序遍历
+      // 防止移动目标节点后面的节点是不稳定的节点
+      // 倒序处理可以保证 锚点是稳定的
+      for (let i = toBePatched - 1; i >= 0; i--) {
+        const nextIndex = i + s2;
+        const nextChild = c2[nextIndex];
+        const anchor = nextIndex + 1 < l2 ? c2[nextIndex + 1].el : null;
+
+        // 如果没有找到映射
+        if (newIndexToOldIndexMap[i] === 0) {
+          // 创建节点
+          patch(null, nextChild, container, parentComponent, anchor);
+        } 
+        // 如果找到映射
+        else {
+          // 如果当前的 i 不在最长递增子序列中
+          if (i !== increasingNewIndexSequence[j]) {
+            // 移动位置
+            insert(nextChild.el, container, anchor);
+          } else {
+            j--;
+          }
         }
       }
     }
@@ -539,4 +584,46 @@ export function createRenderer(options) {
   return {
     createApp: createAppApi(render),
   };
+}
+
+// 最长递增子序列
+function getSequence(arr: number[]): number[] {
+  const p = arr.slice();
+  const result = [0];
+  let i, j, u, v, c;
+  const len = arr.length;
+  for (i = 0; i < len; i++) {
+    const arrI = arr[i];
+    if (arrI !== 0) {
+      j = result[result.length - 1];
+      if (arr[j] < arrI) {
+        p[i] = j;
+        result.push(i);
+        continue;
+      }
+      u = 0;
+      v = result.length - 1;
+      while (u < v) {
+        c = (u + v) >> 1;
+        if (arr[result[c]] < arrI) {
+          u = c + 1;
+        } else {
+          v = c;
+        }
+      }
+      if (arrI < arr[result[u]]) {
+        if (u > 0) {
+          p[i] = result[u - 1];
+        }
+        result[u] = i;
+      }
+    }
+  }
+  u = result.length;
+  v = result[u - 1];
+  while (u-- > 0) {
+    result[u] = v;
+    v = p[v];
+  }
+  return result;
 }
