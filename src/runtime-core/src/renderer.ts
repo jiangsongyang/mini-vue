@@ -358,7 +358,73 @@ export function createRenderer(options) {
     }
     // 乱序
     else {
-      // do ...
+      let s1 = i;
+      let s2 = i;
+
+      // 总共需要处理的节点次数总数
+      const toBePatched = e2 - s2 + 1;
+      // 当前处理过的节点的次数
+      let patched = 0;
+
+      // 根据 i 和 e2 创建映射表
+      // 映射 key 和 i
+      // NOTE :
+      // key 解决的问题 :
+      // 如果在节点上标记了 key
+      // vue 可以进行映射关系 就不用去新节点遍历查找老节点是否存在
+      // 这样可以在时间复杂度从 O(n) 变成 O(1)
+      const KeyToNewIndexMap = new Map();
+      for (let i = s2; i <= e2; i++) {
+        const nextChild = c2[i];
+        KeyToNewIndexMap.set(nextChild.key, i);
+      }
+      // 判断老的是否在新的中
+      for (let i = s1; i <= e1; i++) {
+        // 拿到 老的节点
+        const prevChild = c1[i];
+
+        // 优化逻辑
+        // 如果 当前处理过的次数 大于等于 需要处理的次数
+        // old :  a , b , ( c  , d , e ) , f , g
+        // new :  a , b , ( c ) , f , g
+        // 这种场景就是 
+        // 当前处理了两次 old c ， old d
+        // 但是总共只需要一次 new c
+        // 直接把 c 后面的节点删除就可以了
+        if (patched >= toBePatched) {
+          hostRemove(prevChild.el);
+          continue;
+        }
+
+        // 老节点 在新节点列表中的索引
+        let newIndex;
+
+        // 如果用户声明了 key
+        if (prevChild.key !== null || prevChild.key !== undefined) {
+          // 先从映射表里找
+          newIndex = KeyToNewIndexMap.get(prevChild.key);
+        }
+        // 如果用户没声明 key
+        else {
+          // 遍历
+          for (let j = s2; j < e2; j++) {
+            if (isSameVNodeType(prevChild, c2[j])) {
+              newIndex = j;
+              break;
+            }
+          }
+        }
+        // 老节点在新节点列表中不存在的话
+        if (newIndex === undefined) {
+          hostRemove(prevChild.el);
+        }
+        // 如果存在的话 就继续去 patch
+        // 对该节点进行深度对比
+        else {
+          patch(prevChild, c2[newIndex], container, parentComponent, null);
+          patched++;
+        }
+      }
     }
   }
 

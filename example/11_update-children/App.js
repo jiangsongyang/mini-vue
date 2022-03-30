@@ -139,13 +139,54 @@ import { h, ref } from "../../lib/guide-mini-vue.esm.js";
 // // 删除老的
 // //  old :  a , b , ( c  , d )
 // //  new : ( c  , d )
+// const prevChildren = [
+//   h("div", { key: "A" }, "A"),
+//   h("div", { key: "B" }, "B"),
+//   h("div", { key: "C" }, "C"),
+//   h("div", { key: "D" }, "D"),
+// ];
+// const nextChildren = [h("div", { key: "C" }, "C"), h("div", { key: "D" }, "D")];
+
+// // 乱序
+// // 需要删除
+// // old :  a , b , ( c  , d , e ) , f , g
+// // new :  a , b , ( c ) , f , g
 const prevChildren = [
   h("div", { key: "A" }, "A"),
   h("div", { key: "B" }, "B"),
-  h("div", { key: "C" }, "C"),
+  h("div", { key: "C", id: "c-prev" }, "C"),
   h("div", { key: "D" }, "D"),
+  h("div", { key: "E" }, "E"),
+  h("div", { key: "F" }, "F"),
+  h("div", { key: "G" }, "G"),
 ];
-const nextChildren = [h("div", { key: "C" }, "C"), h("div", { key: "D" }, "D")];
+const nextChildren = [
+  h("div", { key: "A" }, "A"),
+  h("div", { key: "B" }, "B"),
+  h("div", { key: "C", id: "c-next" }, "C"),
+  h("div", { key: "F" }, "F"),
+  h("div", { key: "G" }, "G"),
+];
+
+// // 需要追加
+// //  old :  a , b , ( c ) , f , g
+// //  old :  a , b , ( e  , c ) , f , g
+// const prevChildren = [
+//   h("div", { key: "A" }, "A"),
+//   h("div", { key: "B" }, "B"),
+//   h("div", { key: "C", id: "c-prev" }, "C"),
+//   h("div", { key: "D" }, "D"),
+//   h("div", { key: "F" }, "F"),
+//   h("div", { key: "G" }, "G"),
+// ];
+// const nextChildren = [
+//   h("div", { key: "A" }, "A"),
+//   h("div", { key: "B" }, "B"),
+//   h("div", { key: "E" }, "E"),
+//   h("div", { key: "C", id: "c-next" }, "C"),
+//   h("div", { key: "F" }, "F"),
+//   h("div", { key: "G" }, "G"),
+// ];
 
 export default {
   name: "App",
