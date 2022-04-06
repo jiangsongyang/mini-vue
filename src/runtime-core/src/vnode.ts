@@ -54,6 +54,7 @@ export type VNode<
   // 用于区分该 vnode 是什么形态
   shapeFlag: ShapeFlags;
   key: string | number | undefined;
+  component: any;
 };
 
 export function createVNode(
@@ -70,6 +71,7 @@ export function createVNode(
     type,
     props,
     children,
+    component: null,
     el: null,
     key: props?.key,
     shapeFlag: getShapeFlag(type), // 先根据 type 初始化 shapeFlag

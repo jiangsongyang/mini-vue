@@ -3,6 +3,7 @@ import { isArr, isOn, ShapeFlags } from "../../shared";
 import { VNode, Fragment, Text, isSameVNodeType } from "./vnode";
 import { createAppApi } from "./createApp";
 import { effect } from "../../reactivity";
+import { shouldUpdateComponent } from "./componentUpdateUtils";
 
 export interface RendererNode {
   [key: string]: any;
@@ -458,7 +459,7 @@ export function createRenderer(options) {
         if (newIndexToOldIndexMap[i] === 0) {
           // 创建节点
           patch(null, nextChild, container, parentComponent, anchor);
-        } 
+        }
         // 如果找到映射
         else {
           // 如果当前的 i 不在最长递增子序列中
@@ -488,9 +489,15 @@ export function createRenderer(options) {
     container: RendererElement,
     parentComponent
   ) {
-    console.log("开始处理根组件", n2);
-    mountComponent(n2, container, parentComponent);
-    console.log("处理组件结束", n2);
+    if (!n1) {
+      // 初始化根组件
+      console.log("创建组件 : ", n2);
+      mountComponent(n2, container, parentComponent);
+    } else {
+      // 更新组件
+      console.log("更新组件 : ", n1, n2);
+      updateComponent(n1, n2);
+    }
   }
 
   // 挂载组件
@@ -500,7 +507,10 @@ export function createRenderer(options) {
     parentComponent
   ) {
     // 1 : 创建组件实例
-    const instance = createComponentInstance(vnode, parentComponent);
+    const instance = (vnode.component = createComponentInstance(
+      vnode,
+      parentComponent
+    ));
     console.log("1 : 当前组件实例为 : ", instance);
     // 2 : 安装组件
     setupComponent(instance);
@@ -509,13 +519,39 @@ export function createRenderer(options) {
     setupRenderEffect(instance, vnode, container);
   }
 
+  // 更新组件
+  // HOW ?
+  // 更新组件 === 重新调用组件的 render functuon
+  // 生成新的 vnode
+  // 生成后 再次进行 patch
+  function updateComponent(n1, n2) {
+    const instance = (n2.component = n1.component);
+    // 对比 props 判断是否需要更新
+    if (shouldUpdateComponent(n1, n2)) {
+      console.log("组件需要被更新 因为props发生了变化");
+      // 下次要更新的虚拟节点
+      instance.next = n2;
+      console.log("当前实例对象为 : ", instance);
+      // 因为 setupRenderEffect 会调用 effect
+      // effect 会返回 runner
+      // runner 执行就会调用 fn
+      // 就会走一遍更新逻辑
+      instance.update();
+    } else {
+      console.log("组件不需要被更新 因为props没有发生变化");
+      // 同步 el 和 vnode
+      n2.el = n1.el;
+      n2.vnode = n2;
+    }
+  }
+
   // 组件处理的核心方法
   function setupRenderEffect(
     instance: any,
     initialVNode: VNode,
     container: RendererElement
   ) {
-    effect(() => {
+    instance.update = effect(() => {
       const { proxy } = instance;
       if (!instance.isMounted) {
         // 初始化
@@ -534,6 +570,25 @@ export function createRenderer(options) {
         instance.isMounted = true;
       } else {
         // 更新
+
+        // -----------------------------
+        // pre update
+        //
+        // 在更新之前
+        // 如果是更新 component
+        // 需要提前更新一下 组件的 props
+        // 这里的
+        // vnode 指向 更新之前的虚拟节点
+        // next  指向 需要更新的虚拟节点
+        const { next, vnode } = instance;
+
+        if (next) {
+          // 更新 el
+          next.el = vnode.el;
+          updateComponentPreRender(instance, next);
+        }
+        // -----------------------------
+
         const prevSubTree = instance.subTree;
         const subTree = (instance.subTree = instance.render.call(proxy));
         console.log("**********************************");
@@ -542,6 +597,15 @@ export function createRenderer(options) {
         patch(prevSubTree, subTree, container, instance);
       }
     });
+  }
+
+  function updateComponentPreRender(instance, nextVnode) {
+    // 更新 vnode
+    instance.vnode = nextVnode;
+    // reset state
+    instance.next = null;
+    // 更新组件的 props
+    instance.props = nextVnode.props;
   }
 
   // 处理 Fragment 类型的 VNode
