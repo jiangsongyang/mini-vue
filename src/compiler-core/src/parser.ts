@@ -1,15 +1,33 @@
+/**
+ *
+ *  parse 的核心目的
+ *  是为了生成 ast
+ *
+ *  有了 ast 之后
+ *  就可以进行精细加工 transform
+ *
+ *  最后在生辰代码 codegen
+ *
+ */
+
 import { NodeTypes } from "./ast";
+
+enum TagTypes {
+  START,
+  END,
+}
 
 type Context = {
   source: string;
 };
 
+// parser
 export function baseParser(content: string) {
   const context = createParserContext(content);
-
   return createRoot(parseChildren(context));
 }
 
+// 创建 root
 function createRoot(children) {
   return {
     children,
@@ -22,11 +40,21 @@ function createParserContext(content: string): any {
   };
 }
 
+// 解析 children
 function parseChildren(context: Context) {
   const nodes = [];
   let node;
-  if (context.source.startsWith("{{")) {
+  const s = context.source;
+  // 如果是 ```插值表达式```
+  if (s.startsWith("{{")) {
     node = parseInterpolation(context);
+  }
+  // 如果是 ```元素 ```
+  else if (s[0] === "<") {
+    // 匹配 a-z 忽略大小写
+    if (/[a-z]/i.test(s[1])) {
+      node = parseElement(context);
+    }
   }
   nodes.push(node);
   return nodes;
@@ -71,4 +99,33 @@ function parseInterpolation(context: Context) {
 // 推进
 function advanceBy(context: Context, length: number) {
   context.source = context.source.slice(length);
+}
+
+// 解析元素
+function parseElement(context: Context) {
+  // 解析 开始标签 <div>
+  const element = parseTag(context, TagTypes.START);
+  // 解析 结束标签 </div>
+  parseTag(context, TagTypes.END);
+  return element;
+}
+
+// 解析 tag
+// HOW
+// 解析 tag
+// 删除处理完成的代码 ( 推进 )
+function parseTag(context: Context, type: TagTypes) {
+  // 匹配 tag
+  const match: any = /^<\/?([a-z]*)/i.exec(context.source);
+  const tag = match[1];
+
+  // 推进
+  advanceBy(context, match[0].length);
+  advanceBy(context, 1);
+
+  if (type === TagTypes.END) return;
+  return {
+    type: NodeTypes.ELEMENT,
+    tag,
+  };
 }
