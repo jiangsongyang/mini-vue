@@ -17,6 +17,13 @@ enum TagTypes {
   END,
 }
 
+type ParseTagRes = {
+  type: NodeTypes;
+  tag: string;
+};
+
+type Ancestors = ParseTagRes[];
+
 type Context = {
   source: string;
 };
@@ -24,7 +31,7 @@ type Context = {
 // parser
 export function baseParser(content: string) {
   const context = createParserContext(content);
-  return createRoot(parseChildren(context));
+  return createRoot(parseChildren(context, []));
 }
 
 // 创建 root
@@ -41,28 +48,50 @@ function createParserContext(content: string): any {
 }
 
 // 解析 children
-function parseChildren(context: Context) {
+function parseChildren(context: Context, ancestors: Ancestors) {
   const nodes = [];
-  let node;
-  const s = context.source;
-  // 如果是 ```插值表达式```
-  if (s.startsWith("{{")) {
-    node = parseInterpolation(context);
+  while (!isEnd(context, ancestors)) {
+    let node;
+    const s = context.source;
+    // 如果是 ```插值表达式```
+    if (s.startsWith("{{")) {
+      node = parseInterpolation(context);
+    }
+    // 如果是 ```元素 ```
+    else if (s[0] === "<") {
+      // 匹配 a-z 忽略大小写
+      if (/[a-z]/i.test(s[1])) {
+        node = parseElement(context, ancestors);
+      }
+    }
+    // 如果不是插值 又不是 元素
+    if (!node) {
+      node = parseText(context);
+    }
+    nodes.push(node);
   }
-  // 如果是 ```元素 ```
-  else if (s[0] === "<") {
-    // 匹配 a-z 忽略大小写
-    if (/[a-z]/i.test(s[1])) {
-      node = parseElement(context);
+  return nodes;
+}
+
+// 什么时候需要停止解析 children
+function isEnd(context: Context, ancestors: Ancestors) {
+  // source 有值的时候
+  // ||
+  // 遇到结束标签的时候
+  const s = context.source;
+  if (s.startsWith("</")) {
+    // 倒着循环
+    // 因为用的是 栈
+    // 预期目标在栈顶
+    // 所以倒着循环有助于大部分情况的效率提升
+    for (let i = ancestors.length - 1; i >= 0; i--) {
+      const tag = ancestors[i].tag;
+      if (startsWithEndTagOpen(context.source, tag)) {
+        return true;
+      }
     }
   }
-  // 如果不是插值 又不是 元素
-  if (!node) {
-    node = parseText(context);
-  }
-
-  nodes.push(node);
-  return nodes;
+  return !context.source.length;
 }
 
 // 处理插值表达式
@@ -107,11 +136,25 @@ function advanceBy(context: Context, length: number) {
 }
 
 // 解析元素
-function parseElement(context: Context) {
+function parseElement(context: Context, ancestors: Ancestors) {
   // 解析 开始标签 <div>
-  const element = parseTag(context, TagTypes.START);
-  // 解析 结束标签 </div>
-  parseTag(context, TagTypes.END);
+  const element: any = parseTag(context, TagTypes.START);
+  // 收集到栈中
+  ancestors.push(element);
+  // 解析子元素
+  element.children = parseChildren(context, ancestors);
+  // 解析完 children
+  // 弹出栈
+  ancestors.pop();
+  // 如果 element.tag === souce的类型
+  // 说明都存在开闭标签
+  // 可以正常解析 tag
+  if (startsWithEndTagOpen(context.source, element.tag)) {
+    // 解析 结束标签 </div>
+    parseTag(context, TagTypes.END);
+  } else {
+    throw new Error(`unclosed tag ${element.tag}`);
+  }
   return element;
 }
 
@@ -136,7 +179,23 @@ function parseTag(context: Context, type: TagTypes) {
 }
 
 function parseText(context: Context) {
-  const content = parseTextData(context, context.source.length);
+  // 处理
+  // <> <p>this is text</p> {{ xxx }} </p>
+  // 这种情况
+  let endIndex = context.source.length;
+  let endTokens = ["<", "{{"];
+  for (let i = 0; i < endTokens.length; i++) {
+    // 找 text 中有没有 {{ 或者 <
+    const index = context.source.indexOf(endTokens[i]);
+    // 如果找到了
+    // 且 index 小于 endIndex
+    if (index !== -1 && endIndex > index) {
+      endIndex = index;
+    }
+  }
+
+  const content = parseTextData(context, endIndex);
+
   return {
     type: NodeTypes.TEXT,
     content,
@@ -150,4 +209,11 @@ function parseTextData(context: Context, length: number) {
   advanceBy(context, length);
 
   return content;
+}
+
+function startsWithEndTagOpen(source: string, tag: string) {
+  return (
+    source.startsWith("</") &&
+    source.slice(2, 2 + tag.length).toLowerCase() === tag.toLowerCase()
+  );
 }
