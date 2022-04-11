@@ -56,6 +56,11 @@ function parseChildren(context: Context) {
       node = parseElement(context);
     }
   }
+  // 如果不是插值 又不是 元素
+  if (!node) {
+    node = parseText(context);
+  }
+
   nodes.push(node);
   return nodes;
 }
@@ -78,14 +83,14 @@ function parseInterpolation(context: Context) {
   // 拿到 插值表达式 中间的内容的范围
   const rawContentLength = closeIndex - openDelimiter.length;
   // 截取出插值表达式的内容
-  const rawContent = context.source.slice(0, rawContentLength);
+  const rawContent = parseTextData(context, rawContentLength);
   // 处理空格
   // {{ message }}
   const content = rawContent.trim();
   // 需要继续 推进
   // 防止插值表达式后面还有内容
   // {{ message }}<div>...</div>
-  advanceBy(context, rawContentLength + closeDelimiter.length);
+  advanceBy(context, closeDelimiter.length);
 
   return {
     type: NodeTypes.INTERPOLATION,
@@ -128,4 +133,21 @@ function parseTag(context: Context, type: TagTypes) {
     type: NodeTypes.ELEMENT,
     tag,
   };
+}
+
+function parseText(context: Context) {
+  const content = parseTextData(context, context.source.length);
+  return {
+    type: NodeTypes.TEXT,
+    content,
+  };
+}
+
+function parseTextData(context: Context, length: number) {
+  // 1 . 获取 content
+  const content = context.source.slice(0, length);
+  // 2 . 推进
+  advanceBy(context, length);
+
+  return content;
 }
