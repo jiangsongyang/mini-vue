@@ -6,11 +6,13 @@
  *
  */
 
-export function transform(root, options) {
+export function transform(root, options = {}) {
   const context = createTransformsContext(root, options)
 
   // 1 . 遍历 - 深度优先搜索
   traverseNode(root, context)
+
+  createRootCodegen(root)
 }
 
 function traverseNode(node: any, context) {
@@ -44,4 +46,8 @@ function createTransformsContext(root, options) {
     nodeTransforms: options.nodeTransforms || [],
   }
   return context
+}
+
+function createRootCodegen(root) {
+  root.codegenNode = root.children[0]
 }
