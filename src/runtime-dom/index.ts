@@ -1,6 +1,8 @@
 import { createRenderer } from "../runtime-core";
 import { isOn } from "../shared";
 
+export * from '../runtime-core'
+
 export function createElement(type: string) {
   return document.createElement(type);
 }
@@ -77,3 +79,4 @@ export function createApp(...arg) {
   // 之后开始主流程
   return ensureRenderer().createApp(...arg);
 }
+

@@ -1,13 +1,13 @@
 import { transform } from '../src/transform'
-import { baseParser } from '../src/parser'
-import { NodeTypes } from '../src/ast'
+import { baseParse } from '../src/parser'
+import { NodeType } from '../src/ast'
 
 describe('transform', () => {
   it('happy path', () => {
-    const ast = baseParser(`<div>hi , {{message}}</div>`)
+    const ast = baseParse(`<div>hi , {{message}}</div>`)
 
-    const plugin = (node) => {
-      if (node.type === NodeTypes.TEXT) {
+    const plugin = (node: any) => {
+      if (node.type === NodeType.TEXT) {
         node.content = node.content + 'mini-vue'
       }
     }

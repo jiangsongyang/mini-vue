@@ -1,69 +1,62 @@
-/**
- *
- *  transform 的核心职责
- *  就是对 parser 生成的 ast 树
- *  进行增删改查
- *
- */
-
-import { NodeTypes } from './ast'
+import { NodeType } from './ast'
+import { HelperNameMapping, TO_DISPLAY_STRING } from './runtimeHelpers'
 
 export function transform(root, options = {}) {
-  const context = createTransformsContext(root, options)
-
-  // 1 . 遍历 - 深度优先搜索
+  const context = createTransformContext(root, options)
   traverseNode(root, context)
-
   createRootCodegen(root)
-
   root.helpers = [...context.helpers.keys()]
 }
 
-function traverseNode(node: any, context) {
-  // 1 . 进行转换
-  //     通过全局上下文 注册的 plugins
-  //     使程序有稳定的执行逻辑
-  //     定制化需求从外部传入
-  const nodeTransforms = context.nodeTransforms
-  for (let i = 0; i < nodeTransforms.length; i++) {
-    const nodeTransform = nodeTransforms[i]
-    nodeTransform(node)
-  }
-  switch (node.type) {
-    case NodeTypes.INTERPOLATION:
-      context.helper('toDisplayString')
-      break
-    case NodeTypes.ROOT:
-    case NodeTypes.ELEMENT:
-      traverseChildren(node, context)
-      break
-
-    default:
-      break
+function createRootCodegen(root) {
+  const child = root.children[0]
+  if (child.type === NodeType.ELEMENT) {
+    root.codegenNode = child.codegenNode
+  } else {
+    root.codegenNode = root.children[0]
   }
 }
 
-function traverseChildren(node, context) {
-  const children = node.children
-
-  for (let i = 0; i < children.length; i++) {
-    const node = children[i]
-    traverseNode(node, context)
-  }
-}
-
-function createTransformsContext(root, options) {
+function createTransformContext(root, options) {
   const context = {
     root,
-    nodeTransforms: options.nodeTransforms || [],
+    nodeTransforms: options.nodeTransforms || {},
     helpers: new Map(),
-    helper(key) {
-      context.helpers.set(key, 1)
+    helper(name: string) {
+      context.helpers.set(name, 1)
     },
   }
   return context
 }
 
-function createRootCodegen(root) {
-  root.codegenNode = root.children[0]
+function traverseNode(node, context) {
+  const { nodeTransforms } = context
+  const exitFns: any[] = []
+  for (let i = 0; i < nodeTransforms.length; i++) {
+    const transform = nodeTransforms[i]
+    const exitFn = transform(node, context)
+    if (exitFn) exitFns.push(exitFn)
+  }
+  switch (node.type) {
+    case NodeType.INTERPOLATION:
+      context.helper(TO_DISPLAY_STRING)
+      break
+    case NodeType.ROOT:
+    case NodeType.ELEMENT:
+      traverseChildren(node, context)
+      break
+    default:
+      break
+  }
+  let i = exitFns.length
+  while (i--) {
+    exitFns[i]()
+  }
+}
+
+function traverseChildren(node, context) {
+  const children = node.children
+  for (let i = 0; i < children.length; i++) {
+    traverseNode(children[i], context)
+  }
 }

@@ -1,14 +1,14 @@
-import { baseParser } from "../src/parser";
-import { NodeTypes } from "../src/ast";
+import { baseParse } from "../src/parser";
+import { NodeType } from "../src/ast";
 
 describe("parser", () => {
   describe("interpolation", () => {
     it("simple interpolation", () => {
-      const ast = baseParser("{{ msg }}");
+      const ast = baseParse("{{ msg }}");
       expect(ast.children[0]).toStrictEqual({
-        type: NodeTypes.INTERPOLATION,
+        type: NodeType.INTERPOLATION,
         content: {
-          type: NodeTypes.SIMPLE_EXPRESSION,
+          type: NodeType.SIMPLE_EXPRESSION,
           content: "msg",
         },
       });
@@ -17,9 +17,9 @@ describe("parser", () => {
 
   describe("element", () => {
     it("simple element div", () => {
-      const ast = baseParser("<div></div>");
+      const ast = baseParse("<div></div>");
       expect(ast.children[0]).toStrictEqual({
-        type: NodeTypes.ELEMENT,
+        type: NodeType.ELEMENT,
         tag: "div",
         children: [],
       });
@@ -28,9 +28,9 @@ describe("parser", () => {
 
   describe("text", () => {
     it("simple text", () => {
-      const ast = baseParser("some text");
+      const ast = baseParse("some text");
       expect(ast.children[0]).toStrictEqual({
-        type: NodeTypes.TEXT,
+        type: NodeType.TEXT,
         content: "some text",
       });
     });
@@ -38,19 +38,19 @@ describe("parser", () => {
 
   describe("hello world", () => {
     it("common", () => {
-      const ast = baseParser("<div>hi,{{ message }}</div>");
+      const ast = baseParse("<div>hi,{{ message }}</div>");
       expect(ast.children[0]).toStrictEqual({
-        type: NodeTypes.ELEMENT,
+        type: NodeType.ELEMENT,
         tag: "div",
         children: [
           {
-            type: NodeTypes.TEXT,
+            type: NodeType.TEXT,
             content: "hi,",
           },
           {
-            type: NodeTypes.INTERPOLATION,
+            type: NodeType.INTERPOLATION,
             content: {
-              type: NodeTypes.SIMPLE_EXPRESSION,
+              type: NodeType.SIMPLE_EXPRESSION,
               content: "message",
             },
           },
@@ -59,20 +59,20 @@ describe("parser", () => {
     });
 
     it("nested element", () => {
-      const ast = baseParser("<div><p>hi,</p>{{ message }}</div>");
+      const ast = baseParse("<div><p>hi,</p>{{ message }}</div>");
       expect(ast.children[0]).toStrictEqual({
-        type: NodeTypes.ELEMENT,
+        type: NodeType.ELEMENT,
         tag: "div",
         children: [
           {
-            type: NodeTypes.ELEMENT,
+            type: NodeType.ELEMENT,
             tag: "p",
-            children: [{ type: NodeTypes.TEXT, content: "hi," }],
+            children: [{ type: NodeType.TEXT, content: "hi," }],
           },
           {
-            type: NodeTypes.INTERPOLATION,
+            type: NodeType.INTERPOLATION,
             content: {
-              type: NodeTypes.SIMPLE_EXPRESSION,
+              type: NodeType.SIMPLE_EXPRESSION,
               content: "message",
             },
           },
@@ -82,7 +82,7 @@ describe("parser", () => {
 
     it("should throw error then lack end tag", () => {
       expect(() => {
-        baseParser("<div><p></div>");
+        baseParse("<div><p></div>");
       }).toThrow('unclosed tag p');
     });
   });
